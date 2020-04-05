@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">管道检测</string>
+    <string name="menu_title_settings">设置</string>
+    <string name="menu_title_regard">退出应用</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">设备(摄像机)</string>
+    <string name="sync_header">自动登录</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">UID:</string>
+    <string name="reply_title">用户名</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">自动链接摄像机</string>
+</resources>
