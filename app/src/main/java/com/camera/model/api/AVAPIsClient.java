@@ -2,6 +2,7 @@ package com.camera.model.api;
 
 
 import android.os.Message;
+import android.util.Log;
 
 import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.User;
@@ -263,6 +264,7 @@ public class AVAPIsClient {
         result[1] = 268&0xff;
         result[5] = 0;//channel
         int ret = av.avSendIOCtrl(avIndex, IOTYPE_USER_IPCAM_SET_TIMEZONE_RESP   ,result,268);
+        Log.i("setOSD结果",ret+"");
     }
     /**
      * 关闭连接

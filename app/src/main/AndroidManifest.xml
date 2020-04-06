@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.zhuangliming.cam">
+    package="com.zhuangliming.cam"
+    >
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     <application
+        android:name="com.zhuangliming.CamOKApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_share_logo"
         android:label="@string/app_name"

@@ -58,6 +58,7 @@ public class TaskCenter {
             @Override
             public void run() {
                 try {
+
                     socket = new Socket(ipAddress, port);
 //                    socket.setSoTimeout ( 2 * 1000 );//设置超时时间
                     if (isConnected()) {
