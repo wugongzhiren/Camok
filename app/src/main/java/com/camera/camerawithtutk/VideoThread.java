@@ -1,6 +1,8 @@
 package com.camera.camerawithtutk;
 
 
+import android.util.Log;
+
 import com.camera.model.SaveFrames;
 import com.decode.tools.BufferInfo;
 import com.tutk.IOTC.AVAPIs;
@@ -50,7 +52,7 @@ public class VideoThread implements Runnable {
                     VIDEO_BUF_SIZE, outBufSize, outFrameSize,
                     frameInfo, FRAME_INFO_SIZE,
                     outFrmInfoBufSize, frameNumber);
-
+            Log.i("videoBuffer","videoBuffer实际长度"+ret+"长度:"+videoBuffer.length);
             if (ret == AVAPIs.AV_ER_DATA_NOREADY) {
                 try {
                     Thread.sleep(30);
@@ -86,6 +88,7 @@ public class VideoThread implements Runnable {
             // Now the data is ready in videoBuffer[0 ... ret - 1]
             //----------------------把videobuffer信息加入阻塞队列----------------------
             try {
+                Log.i("videoBuffer","outFrameSize:"+outFrameSize[0]);
                 BufferInfo bi = new BufferInfo(outFrameSize[0], videoBuffer);
                 bq.offer(bi);
 

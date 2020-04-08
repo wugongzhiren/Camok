@@ -1,10 +1,15 @@
 package com.zhuangliming.cam;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -14,12 +19,15 @@ import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.media.MediaRecorder;
+import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
@@ -46,7 +54,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.VideoInfo;
@@ -118,6 +129,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private ImageView imageViewLed2;
     public Handler handler;
     private ImageView imageViewSettings;
+    private ImageButton recordBt;
     private ImageButton ButtonZoomTele;
     private ImageButton ButtonZoomWide;
     private ImageButton ButtonMotorUp;
@@ -127,7 +139,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private RadioButton radioButtonCamType;
     private TextView osdInfoTx;
     private TextureView textureView;
-
+    private MediaProjectionManager projectionManager;
+    private MediaProjection mediaProjection;
+    private ScreenService recordService;
+    private static int RECORD_REQUEST_CODE = 5;
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
@@ -253,7 +268,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         ButtonZoomTele = (ImageButton) findViewById(R.id.imageViewZOOM_TELE);
         ButtonZoomWide = (ImageButton) findViewById(R.id.imageViewZOOM_WIDE);
         ButtonMotorUp = (ImageButton) findViewById(R.id.imageViewMotorUp);
-        ;
+        recordBt=findViewById(R.id.record);
         ButtonMotorDown = (ImageButton) findViewById(R.id.imageViewMotorDown);
         radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
         mToolLayout = findViewById(R.id.constraintLayout);
@@ -273,6 +288,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         } catch (Exception e) {
             e.printStackTrace();
         }
+        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        Intent intent = new Intent(this, ScreenService.class);
+        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
         // 此线程从阻塞队列poll buffer信息并送入解码
         // 绑定surfaceview
        /* mySurfaceView= new MySurfaceView(this,mediaCodecDecoder) {
@@ -303,6 +321,18 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
                 takeScreenShot("");
                 // mToolLayout.setVisibility(View.GONE);
                 //ScreenUtil.screenCap();
+            }
+        });
+        recordBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,"录制",Toast.LENGTH_SHORT).show();
+                if(VideoThread.startReceive){
+                    VideoThread.startReceive = false;
+                }else{
+                    VideoThread.startReceive = true;
+                }
+
             }
         });
     }
@@ -837,20 +867,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
                 REQUEST_MEDIA_PROJECTION);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case REQUEST_MEDIA_PROJECTION:
-                if (resultCode == RESULT_OK && data != null) {
-                    FloatWindowsService.setResultData(data);
-                    startService(new Intent(getApplicationContext(), FloatWindowsService.class));
-                }
-                break;
-        }
-
-    }
 
     public boolean takeScreenShot(String imagePath) {
         if (imagePath.equals("")) {
@@ -891,11 +907,105 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        mediaCodecDecoder.release();
         return false;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
+    }
+
+    public static void checkPermission(AppCompatActivity activity) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            int checkPermission =
+                    ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)
+                            + ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_PHONE_STATE)
+                            + ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            + ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (checkPermission != PackageManager.PERMISSION_GRANTED) {
+                //动态申请
+                ActivityCompat.requestPermissions(activity, new String[]{
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE}, 123);
+                return;
+            } else {
+                return;
+            }
+        }
+        return;
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RECORD_REQUEST_CODE && resultCode == RESULT_OK) {
+            //######## 录屏逻辑 ########
+            mediaProjection = projectionManager
+                    .getMediaProjection(resultCode, data);
+            recordService.setMediaProject(mediaProjection);
+            recordService.startRecord();
+            //mButton.setText("结束");
+        }else {
+            Toast.makeText(this,"拒绝录制",Toast.LENGTH_SHORT).show();
+        }
+    }
+    MediaRecorder mMediaRecorder;
+    String mRecordFilePath;
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setUpMediaRecorder() {
+
+        mRecordFilePath = Environment.getDataDirectory().getPath()  + File.separator+  System.currentTimeMillis() + ".mp4";
+        if (mMediaRecorder == null){
+            mMediaRecorder = new MediaRecorder();
+        }
+        //设置音频来源
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        //设置视频来源
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+        //输出的录屏文件格式
+        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        //录屏文件路径
+        mMediaRecorder.setOutputFile( mRecordFilePath );
+        //视频尺寸
+        //mMediaRecorder.setVideoSize(textureView.getWidth(), textureView.getWidth());
+        //音视频编码器
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        //比特率
+       // mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 3.6));
+        //视频帧率
+        mMediaRecorder.setVideoFrameRate(20);
+
+        try {
+            mMediaRecorder.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            DisplayMetrics metrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            ScreenService.RecordBinder binder = (ScreenService.RecordBinder) service;
+            Log.i("ScreenService","ScreenService onServiceConnected");
+            recordService = binder.getRecordService();
+            recordService
+                    .setConfig(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi);
+           // mButton.setEnabled(true);
+            //mButton.setText(recordService.isRunning() ? "结束" : "开始");
+        }
+
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {}
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(mServiceConnection);
     }
 }
