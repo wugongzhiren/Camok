@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/parent"
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -52,7 +53,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/imageButton"
+            android:id="@+id/editOsd"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginStart="16dp"
@@ -68,7 +69,7 @@
             android:layout_marginStart="16dp"
             android:src="@drawable/shezhinormal"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageButton"
+            app:layout_constraintStart_toEndOf="@+id/editOsd"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
@@ -110,6 +111,85 @@
         tools:layout_editor_absoluteX="16dp" >
     </FrameLayout>-->
 
+    <FrameLayout
+        android:id="@+id/textInfoFrame"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        <TextView
+            android:text="检测任务："
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/taskNameTx"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="井号信息："
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/wellNameTx"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="检测信息："
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/checkInfoTx"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="检测单位"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/checkCompanyTx"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
     <TextureView
         android:id="@+id/frame"
         android:layout_width="match_parent"
@@ -197,7 +277,7 @@
             android:background="@drawable/zhaopian"
             android:scaleType="centerCrop"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView8" />
+            app:layout_constraintTop_toBottomOf="@+id/record" />
 
     <TextView
         android:id="@+id/osdInfo"

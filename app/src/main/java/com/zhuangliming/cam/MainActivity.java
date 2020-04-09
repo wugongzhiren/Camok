@@ -34,6 +34,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -49,6 +50,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -73,6 +75,7 @@ import com.hankvision.ipcsdk.JTimeOsdInfo;
 import com.zhuangliming.cam.view.FloatWindowsService;
 import com.zhuangliming.cam.view.MyRender;
 import com.zhuangliming.cam.view.MySurfaceView;
+import com.zhuangliming.cam.view.OsdPopView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -85,7 +88,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity implements Dllipcsdk.CBRawData, TextureView.SurfaceTextureListener {
+public class MainActivity extends Activity implements Dllipcsdk.CBRawData, TextureView.SurfaceTextureListener, View.OnClickListener {
     static {
         System.loadLibrary("native-lib");
     }
@@ -120,16 +123,26 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private byte[] pps = {0, 0, 0, 1, 104, -18, 60, -128/*,0,0,0,1,6,-27,1,91,-128*/};
 
     private Thread t1;
-    //MySurfaceView mySurfaceView; // 视频播放绑定的surface
     MediaCodecDecoder mediaCodecDecoder; //解码器
     public static BlockingDeque<BufferInfo> bq;
     public BlockingDeque<BufferInfo> xbq;
     public IoCtrl ioCtrl;
     private Button buttonConnect;
     private ImageView imageViewLed2;
-    public Handler handler;
+    public  Handler handler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            taskNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("taskname"));
+            wellNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("wellname"));
+            checkInfoTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkinfo"));
+            checkCompanyTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkcompany"));
+            frameLayout.setVisibility(View.VISIBLE);
+        }
+    };
     private ImageView imageViewSettings;
     private ImageButton recordBt;
+    private ImageView editOsdImg;
     private ImageButton ButtonZoomTele;
     private ImageButton ButtonZoomWide;
     private ImageButton ButtonMotorUp;
@@ -143,6 +156,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private MediaProjection mediaProjection;
     private ScreenService recordService;
     private static int RECORD_REQUEST_CODE = 5;
+    private ConstraintLayout parentView;
+    private FrameLayout frameLayout;
+    private TextView taskNameTx;
+    private TextView wellNameTx;
+    private TextView checkInfoTx;
+    private TextView checkCompanyTx;
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
@@ -269,12 +288,19 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         ButtonZoomWide = (ImageButton) findViewById(R.id.imageViewZOOM_WIDE);
         ButtonMotorUp = (ImageButton) findViewById(R.id.imageViewMotorUp);
         recordBt=findViewById(R.id.record);
+        editOsdImg=findViewById(R.id.editOsd);
         ButtonMotorDown = (ImageButton) findViewById(R.id.imageViewMotorDown);
         radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
         mToolLayout = findViewById(R.id.constraintLayout);
         screenCapBt = findViewById(R.id.imageView9);
         osdInfoTx = findViewById(R.id.osdInfo);
+        frameLayout=findViewById(R.id.textInfoFrame);
+        parentView=findViewById(R.id.parent);
         textureView = findViewById(R.id.frame);
+        taskNameTx=findViewById(R.id.taskNameTx);
+        wellNameTx=findViewById(R.id.wellNameTx);
+        checkInfoTx=findViewById(R.id.checkInfoTx);
+        checkCompanyTx=findViewById(R.id.checkCompanyTx);
         textureView.setSurfaceTextureListener(this);
         /*glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setRenderer(new MyRender());
@@ -303,6 +329,15 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             }
         };
         frameLayout.addView(mySurfaceView);*/
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.editOsd:
+                displayDialog();
+                break;
+        }
     }
 
     private void initEvent() {
@@ -335,6 +370,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
 
             }
         });
+        editOsdImg.setOnClickListener(this);
     }
 
     //辅助灯
@@ -1008,4 +1044,40 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         super.onDestroy();
         unbindService(mServiceConnection);
     }
+
+    public void displayDialog(){
+
+        OsdPopView myPopupWindow = new OsdPopView(this,handler);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        lightOff();
+
+        /**
+         * 消失时屏幕变亮
+         */
+        myPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+
+                layoutParams.alpha=1.0f;
+
+                getWindow().setAttributes(layoutParams);
+            }
+        });
+    }
+
+    /**
+     * 显示时屏幕变暗
+     */
+    private void lightOff() {
+
+        Toast.makeText(this,"变暗",Toast.LENGTH_SHORT).show();
+        WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+
+        layoutParams.alpha=0.3f;
+
+        getWindow().setAttributes(layoutParams);
+
+    }
+
 }

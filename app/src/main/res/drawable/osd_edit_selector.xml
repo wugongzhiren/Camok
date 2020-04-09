@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+        <!--常规演示-->
+        <item android:drawable="@drawable/osd_edit_bg" />
+        <!--得到焦点时的样式-->
+        <item android:drawable="@drawable/osd_edit_bg_focus" android:state_focused="true" />
+
+</selector>
