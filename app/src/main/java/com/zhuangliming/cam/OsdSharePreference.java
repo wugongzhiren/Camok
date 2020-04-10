@@ -7,9 +7,7 @@ public class OsdSharePreference {
     private SharedPreferences share;
     private SharedPreferences.Editor editor;
     private String SHARED_NAME = "osdInfo";//sp的文件名 自定义
-
-
-    //MyAPP.getContext() 是你的Application里面的一个Context
+    
     private OsdSharePreference(Context context) {
         share = context.getSharedPreferences(SHARED_NAME, Context.MODE_PRIVATE);
         editor = share.edit();

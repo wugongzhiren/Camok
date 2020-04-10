@@ -98,7 +98,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     }
 
     public static final int REQUEST_MEDIA_PROJECTION = 18;
-    int oldCam = 1;
+    int oldCam = 0;
     String strIp = "192.168.1.18";
     String strUsername = "admin";
     String strPassword = "admin";
@@ -151,7 +151,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private ImageButton ButtonMotorDown;
     private ImageButton screenCapBt;
     private ConstraintLayout mToolLayout;
-    private RadioButton radioButtonCamType;
+    //private RadioButton radioButtonCamType;
     private TextureView textureView;
     private MediaProjectionManager projectionManager;
     private MediaProjection mediaProjection;
@@ -291,7 +291,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         recordBt=findViewById(R.id.record);
         editOsdImg=findViewById(R.id.editOsd);
         ButtonMotorDown = (ImageButton) findViewById(R.id.imageViewMotorDown);
-        radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
+       // radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
         mToolLayout = findViewById(R.id.constraintLayout);
         screenCapBt = findViewById(R.id.imageView9);
         osdParent=findViewById(R.id.textInfoParent);
@@ -366,17 +366,17 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
                 }*/
                 //StartRecord(v);
                 takeScreenShot();
-                // mToolLayout.setVisibility(View.GONE);
-                //ScreenUtil.screenCap();
             }
         });
         recordBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this,"录制",Toast.LENGTH_SHORT).show();
+
                 if(VideoThread.startReceive){
+                    Toast.makeText(MainActivity.this,"结束录制",Toast.LENGTH_SHORT).show();
                     VideoThread.startReceive = false;
                 }else{
+                    Toast.makeText(MainActivity.this,"开始录制",Toast.LENGTH_SHORT).show();
                     VideoThread.startReceive = true;
                 }
 
@@ -719,9 +719,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     long lRawHandle = -1;
 
     public void StartRaw(View v) {
-        if (radioButtonCamType.isChecked()) {
+        /*if (radioButtonCamType.isChecked()) {
             oldCam = 0;
-        }
+        }*/
         ioCtrl.initTCP();
         if (oldCam == 0) {
             getUserInfo();
@@ -943,6 +943,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             mScreenBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
+            Toast.makeText(MainActivity.this,"截图成功",Toast.LENGTH_SHORT).show();
             return true;
         } catch (Exception e) {
             Log.i("screencap", "compress error");
@@ -984,9 +985,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             //int x = (bitmap.getWidth() - bounds.width()) / 6;
             //int y = (bitmap.getHeight() + bounds.height()) / 5;
             canvas.drawText("检测任务："+OsdSharePreference.getInstance(mContext).getString("taskname"), 30, 60, paint);
-            canvas.drawText("井号信息："+OsdSharePreference.getInstance(mContext).getString("wellname"), 30, 90 , paint);
-            canvas.drawText("检测信息："+OsdSharePreference.getInstance(mContext).getString("checkinfo"), 30 , 120, paint);
-            canvas.drawText("检测单位："+OsdSharePreference.getInstance(mContext).getString("checkcompany"), 30 , 150 , paint);
+            canvas.drawText("井号信息："+OsdSharePreference.getInstance(mContext).getString("wellname"), 30, 110 , paint);
+            canvas.drawText("检测信息："+OsdSharePreference.getInstance(mContext).getString("checkinfo"), 30 , 160, paint);
+            canvas.drawText("检测单位："+OsdSharePreference.getInstance(mContext).getString("checkcompany"), 30 , 210 , paint);
             return bitmap;
         } catch (Exception e) {
             return null;

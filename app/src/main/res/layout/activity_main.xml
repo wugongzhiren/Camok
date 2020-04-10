@@ -93,14 +93,14 @@
             app:layout_constraintEnd_toStartOf="@+id/battery"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <RadioButton
+      <!--  <RadioButton
             android:id="@+id/radioButton"
             android:layout_width="120dp"
             android:layout_height="36dp"
             android:layout_marginStart="16dp"
             android:text="新/旧相机"
             app:layout_constraintStart_toEndOf="@+id/imageViewOSD"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -117,8 +117,8 @@
             tools:layout_editor_absoluteX="0dp" />
         <LinearLayout
             android:id="@+id/textInfoParent"
-            android:layout_marginLeft="30dp"
-            android:layout_marginTop="30dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="10dp"
             android:orientation="vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
