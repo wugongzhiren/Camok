@@ -10,10 +10,13 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
@@ -50,6 +53,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -129,15 +133,13 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     public IoCtrl ioCtrl;
     private Button buttonConnect;
     private ImageView imageViewLed2;
+    private ImageView imageViewOSD;
     public  Handler handler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            taskNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("taskname"));
-            wellNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("wellname"));
-            checkInfoTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkinfo"));
-            checkCompanyTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkcompany"));
-            frameLayout.setVisibility(View.VISIBLE);
+            setOsdInfo();
+            osdParent.setVisibility(View.VISIBLE);
         }
     };
     private ImageView imageViewSettings;
@@ -150,14 +152,13 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private ImageButton screenCapBt;
     private ConstraintLayout mToolLayout;
     private RadioButton radioButtonCamType;
-    private TextView osdInfoTx;
     private TextureView textureView;
     private MediaProjectionManager projectionManager;
     private MediaProjection mediaProjection;
     private ScreenService recordService;
     private static int RECORD_REQUEST_CODE = 5;
-    private ConstraintLayout parentView;
-    private FrameLayout frameLayout;
+    private LinearLayout parentView;
+    private LinearLayout osdParent;
     private TextView taskNameTx;
     private TextView wellNameTx;
     private TextView checkInfoTx;
@@ -199,7 +200,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         setContentView(R.layout.activity_main);
         initView();
         initEvent();
-
+        initData();
         //添加菜单
         initVideoList();
 
@@ -276,7 +277,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
                 return false;
             }
         });
-        SetParam(osdInfoTx);
+        /*SetParam(osdInfoTx);*/
     }
 
     private void initView() {
@@ -293,14 +294,14 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
         mToolLayout = findViewById(R.id.constraintLayout);
         screenCapBt = findViewById(R.id.imageView9);
-        osdInfoTx = findViewById(R.id.osdInfo);
-        frameLayout=findViewById(R.id.textInfoFrame);
+        osdParent=findViewById(R.id.textInfoParent);
         parentView=findViewById(R.id.parent);
         textureView = findViewById(R.id.frame);
         taskNameTx=findViewById(R.id.taskNameTx);
         wellNameTx=findViewById(R.id.wellNameTx);
         checkInfoTx=findViewById(R.id.checkInfoTx);
         checkCompanyTx=findViewById(R.id.checkCompanyTx);
+        imageViewOSD=findViewById(R.id.imageViewOSD);
         textureView.setSurfaceTextureListener(this);
         /*glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setRenderer(new MyRender());
@@ -337,6 +338,17 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             case R.id.editOsd:
                 displayDialog();
                 break;
+            case R.id.imageViewOSD:
+                int osdShow=OsdSharePreference.getInstance(this).getInt("osd",0);
+                if(0==osdShow){
+                    setOsdInfo();
+                    osdParent.setVisibility(View.VISIBLE);
+                    OsdSharePreference.getInstance(this).putInt("osd",1);
+                }else{
+                    osdParent.setVisibility(View.GONE);
+                    OsdSharePreference.getInstance(this).putInt("osd",0);
+                }
+
         }
     }
 
@@ -345,15 +357,15 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         screenCapBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int nPicBuffer = 2 * 1024 * 1024;
+               /* int nPicBuffer = 2 * 1024 * 1024;
                 byte[] pPicBuffer = new byte[nPicBuffer];
                 int nPicLenth = Dllipcsdk.IPCNET_CapturePicture(strIp, nHttpPort, strUsername, strPassword, pPicBuffer, nPicBuffer);
                 Log.i("截图", "nPicLenth:" + nPicLenth);
                 if (nPicLenth > 0) {
                     System.out.println("IPCNET_CapturePicture:  ----- " + nPicLenth);
-                }
+                }*/
                 //StartRecord(v);
-                takeScreenShot("");
+                takeScreenShot();
                 // mToolLayout.setVisibility(View.GONE);
                 //ScreenUtil.screenCap();
             }
@@ -371,8 +383,15 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             }
         });
         editOsdImg.setOnClickListener(this);
+        imageViewOSD.setOnClickListener(this);
     }
 
+    public void initData(){
+        if(OsdSharePreference.getInstance(this).getInt("osd",0)==1){
+            setOsdInfo();
+            osdParent.setVisibility(View.VISIBLE);
+        }
+    }
     //辅助灯
     private boolean led2 = false;
 
@@ -458,7 +477,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         camConnect = 1;
         buttonConnect.setText("已链接");
         buttonConnect.setBackgroundColor(0xff00ff00);
-        SetParam(osdInfoTx);
+       /* SetParam(osdInfoTx);*/
     }
 
 
@@ -631,6 +650,13 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         String name;
         name = userInfo.getString("name", null);
         System.out.println(name);
+    }
+
+    private void setOsdInfo(){
+        taskNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("taskname"));
+        wellNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("wellname"));
+        checkInfoTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkinfo"));
+        checkCompanyTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkcompany"));
     }
 
     private void noUseToast() {
@@ -904,11 +930,14 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     }
 
 
-    public boolean takeScreenShot(String imagePath) {
-        if (imagePath.equals("")) {
-            imagePath = Environment.getExternalStorageDirectory() + File.separator + "Screenshot.png";
-        }
-        Bitmap mScreenBitmap = textureView.getBitmap();
+    /**
+     * 截图
+     * @return
+     */
+    public boolean takeScreenShot() {
+        String imagePath = Environment.getExternalStorageDirectory() + File.separator + "screenshot"+System.currentTimeMillis()+".png";
+        Bitmap mScreenBitmap =drawText2Bitmap(textureView.getBitmap(),this);
+
         try {
             FileOutputStream out = new FileOutputStream(imagePath);
             mScreenBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -919,8 +948,49 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             Log.i("screencap", "compress error");
             return false;
         }
+    }
 
+    /**
+     * 截图处理，因为textureview无法捕获本身之外的view信息
+     * @param bitmap
+     * @param mContext
+     * @return
+     */
+    public static Bitmap drawText2Bitmap(Bitmap bitmap, Context mContext) {
 
+        //判断是否显示osd
+        if(OsdSharePreference.getInstance(mContext).getInt("osd",0)==0){
+            return bitmap;
+        }
+        try {
+
+            Resources resources = mContext.getResources();
+            float scale = resources.getDisplayMetrics().density;
+            android.graphics.Bitmap.Config bitmapConfig = bitmap.getConfig();
+            // set default bitmap config if none
+            if (bitmapConfig == null) bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+            // resource bitmaps are imutable, so we need to convert it to mutable one
+            bitmap = bitmap.copy(bitmapConfig, true);
+
+            Canvas canvas = new Canvas(bitmap);
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG); // new antialised Paint
+            paint.setColor(Color.rgb(255, 255, 255));       // text color - #3D3D3D
+            paint.setTextSize((int)(12 * scale));           // text size in pixels
+            paint.setShadowLayer(1f, 0f, 1f, Color.DKGRAY); // text shadow
+
+            // draw text to the Canvas center
+            Rect bounds = new Rect();
+            //paint.getTextBounds(text, 0, text.length(), bounds);
+            //int x = (bitmap.getWidth() - bounds.width()) / 6;
+            //int y = (bitmap.getHeight() + bounds.height()) / 5;
+            canvas.drawText("检测任务："+OsdSharePreference.getInstance(mContext).getString("taskname"), 30, 60, paint);
+            canvas.drawText("井号信息："+OsdSharePreference.getInstance(mContext).getString("wellname"), 30, 90 , paint);
+            canvas.drawText("检测信息："+OsdSharePreference.getInstance(mContext).getString("checkinfo"), 30 , 120, paint);
+            canvas.drawText("检测单位："+OsdSharePreference.getInstance(mContext).getString("checkcompany"), 30 , 150 , paint);
+            return bitmap;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private Surface mSurface;

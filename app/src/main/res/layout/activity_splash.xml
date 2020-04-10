@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff">
+<ImageView
+    android:id="@+id/logo"
+    android:background="@mipmap/icon_login_logo"
+    android:layout_centerInParent="true"
+    android:layout_width="80dp"
+    android:layout_height="80dp"/>
+    <!--<TextView
+        android:text="管道检测"
+        android:layout_centerInParent="true"
+        android:layout_below="@+id/logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>-->
+</RelativeLayout>

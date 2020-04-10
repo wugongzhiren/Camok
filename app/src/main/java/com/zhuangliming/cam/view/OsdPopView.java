@@ -117,6 +117,7 @@ public class OsdPopView extends PopupWindow {
                 OsdSharePreference.getInstance(mContext).putString("checkinfo",checkInfoEdit.getText().toString());
                 OsdSharePreference.getInstance(mContext).putString("checkcompany",checkCompanyEdit.getText().toString());
                 mHandle.sendEmptyMessage(0);
+                dismiss();
             }
         });
     }
