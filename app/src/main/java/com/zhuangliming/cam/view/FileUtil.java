@@ -3,9 +3,12 @@ package com.zhuangliming.cam.view;
 import android.content.Context;
 import android.os.Environment;
 
+import com.zhuangliming.cam.model.MediaItem;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by ryze on 2016-5-26.
@@ -66,5 +69,8 @@ public class FileUtil {
 
     }
 
+    public List<MediaItem> getPhotoItems(){
+
+    }
 
 }

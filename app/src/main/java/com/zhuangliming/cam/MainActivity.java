@@ -77,6 +77,7 @@ import com.hankvision.ipcsdk.JMultipleOsdInfo;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
 import com.zhuangliming.cam.view.FloatWindowsService;
+import com.zhuangliming.cam.view.MediaPopView;
 import com.zhuangliming.cam.view.MyRender;
 import com.zhuangliming.cam.view.MySurfaceView;
 import com.zhuangliming.cam.view.OsdPopView;
@@ -150,7 +151,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private ImageButton ButtonMotorUp;
     private ImageButton ButtonMotorDown;
     private ImageButton screenCapBt;
-    private ConstraintLayout mToolLayout;
+    private ImageView columImg;
     //private RadioButton radioButtonCamType;
     private TextureView textureView;
     private MediaProjectionManager projectionManager;
@@ -292,7 +293,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         editOsdImg=findViewById(R.id.editOsd);
         ButtonMotorDown = (ImageButton) findViewById(R.id.imageViewMotorDown);
        // radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
-        mToolLayout = findViewById(R.id.constraintLayout);
+        columImg=findViewById(R.id.imageView2);
         screenCapBt = findViewById(R.id.imageView9);
         osdParent=findViewById(R.id.textInfoParent);
         parentView=findViewById(R.id.parent);
@@ -315,9 +316,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         } catch (Exception e) {
             e.printStackTrace();
         }
-        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-        Intent intent = new Intent(this, ScreenService.class);
-        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
         // 此线程从阻塞队列poll buffer信息并送入解码
         // 绑定surfaceview
        /* mySurfaceView= new MySurfaceView(this,mediaCodecDecoder) {
@@ -348,6 +346,11 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
                     osdParent.setVisibility(View.GONE);
                     OsdSharePreference.getInstance(this).putInt("osd",0);
                 }
+                break;
+            case R.id.imageView2:
+                //打开媒体
+                displayMediaPop();
+                break;
 
         }
     }
@@ -384,6 +387,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         });
         editOsdImg.setOnClickListener(this);
         imageViewOSD.setOnClickListener(this);
+        columImg.setOnClickListener(this);
     }
 
     public void initData(){
@@ -914,21 +918,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         }
     }
 
-    public void requestCapturePermission() {
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            //5.0 之后才允许使用屏幕截图
-
-            return;
-        }
-
-        MediaProjectionManager mediaProjectionManager = (MediaProjectionManager)
-                getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        startActivityForResult(
-                mediaProjectionManager.createScreenCaptureIntent(),
-                REQUEST_MEDIA_PROJECTION);
-    }
-
 
     /**
      * 截图
@@ -1023,97 +1012,13 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
 
     }
 
-    public static void checkPermission(AppCompatActivity activity) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            int checkPermission =
-                    ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)
-                            + ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_PHONE_STATE)
-                            + ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                            + ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (checkPermission != PackageManager.PERMISSION_GRANTED) {
-                //动态申请
-                ActivityCompat.requestPermissions(activity, new String[]{
-                        Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.READ_PHONE_STATE,
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE}, 123);
-                return;
-            } else {
-                return;
-            }
-        }
-        return;
-    }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RECORD_REQUEST_CODE && resultCode == RESULT_OK) {
-            //######## 录屏逻辑 ########
-            mediaProjection = projectionManager
-                    .getMediaProjection(resultCode, data);
-            recordService.setMediaProject(mediaProjection);
-            recordService.startRecord();
-            //mButton.setText("结束");
-        }else {
-            Toast.makeText(this,"拒绝录制",Toast.LENGTH_SHORT).show();
-        }
-    }
-    MediaRecorder mMediaRecorder;
-    String mRecordFilePath;
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void setUpMediaRecorder() {
-
-        mRecordFilePath = Environment.getDataDirectory().getPath()  + File.separator+  System.currentTimeMillis() + ".mp4";
-        if (mMediaRecorder == null){
-            mMediaRecorder = new MediaRecorder();
-        }
-        //设置音频来源
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        //设置视频来源
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        //输出的录屏文件格式
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        //录屏文件路径
-        mMediaRecorder.setOutputFile( mRecordFilePath );
-        //视频尺寸
-        //mMediaRecorder.setVideoSize(textureView.getWidth(), textureView.getWidth());
-        //音视频编码器
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        //比特率
-       // mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 3.6));
-        //视频帧率
-        mMediaRecorder.setVideoFrameRate(20);
-
-        try {
-            mMediaRecorder.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            ScreenService.RecordBinder binder = (ScreenService.RecordBinder) service;
-            Log.i("ScreenService","ScreenService onServiceConnected");
-            recordService = binder.getRecordService();
-            recordService
-                    .setConfig(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi);
-           // mButton.setEnabled(true);
-            //mButton.setText(recordService.isRunning() ? "结束" : "开始");
-        }
 
 
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {}
-    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
+        mediaCodecDecoder.release();
     }
 
     public void displayDialog(){
@@ -1137,6 +1042,29 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         });
     }
 
+    /**
+     * 打开媒体文件库
+     */
+    public void displayMediaPop(){
+
+        MediaPopView myPopupWindow = new MediaPopView(this);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        lightOff();
+
+        /**
+         * 消失时屏幕变亮
+         */
+        myPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+
+                layoutParams.alpha=1.0f;
+
+                getWindow().setAttributes(layoutParams);
+            }
+        });
+    }
     /**
      * 显示时屏幕变暗
      */
