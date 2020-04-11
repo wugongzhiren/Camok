@@ -1,4 +1,4 @@
-package com.zhuangliming.cam;
+package com.zhuangliming.camok;
 
 import com.tutk.IOTC.IOTCAPIs;
 import com.tutk.IOTC.AVAPIs;

@@ -5,10 +5,8 @@ import android.os.Message;
 import android.util.Log;
 
 import com.camera.camerawithtutk.VideoThread;
-import com.camera.model.User;
 import com.tutk.IOTC.AVAPIs;
 import com.tutk.IOTC.IOTCAPIs;
-import com.zhuangliming.cam.MainActivity;
 
 
 import java.util.Arrays;

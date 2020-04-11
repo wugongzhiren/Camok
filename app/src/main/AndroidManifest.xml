@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.zhuangliming.cam">
+    package="com.zhuangliming.camok">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,14 +20,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".SettingsActivity"
+            android:name="com.zhuangliming.camok.SettingsActivity"
             android:label="@string/title_activity_settings" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.zhuangliming.camok.MainActivity"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
         <activity
-            android:name=".SplashActivity"
+            android:name="com.zhuangliming.camok.SplashActivity"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
             <intent-filter>
@@ -37,10 +37,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".PLVideoViewActivity">
+        <activity android:name="com.zhuangliming.camok.PLVideoViewActivity">
 
         </activity>
-        <service android:name=".ScreenService"></service>
+        <service android:name="com.zhuangliming.camok.ScreenService"></service>
     </application>
 
 </manifest>
