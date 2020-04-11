@@ -5,6 +5,8 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Surface;
 
@@ -165,11 +167,18 @@ public class MediaCodecDecoder {
 
 
     // 解码数据到surface
-    public int output(){
+    private  boolean isFirstOpenConnected=true;
+    public int output(Handler handler){
         mBI = new MediaCodec.BufferInfo();
         int i = mMC.dequeueOutputBuffer(mBI, oBUFFER_TIMEOUT);// 把转码后的数据存到mBI
         while(i >= 0){
-            ByteBuffer outputBuffer =mMC.getOutputBuffers()[i];
+            if(isFirstOpenConnected){
+                Message message=Message.obtain();
+                message.arg1=3;
+                handler.sendMessage(message);
+            }
+            isFirstOpenConnected=false;
+           // ByteBuffer outputBuffer =mMC.getOutputBuffers()[i];
             /*writeSampleData(videoTrackIndex,mBI,outputBuffer);
             if(j>500){
                 releaseMuxer();

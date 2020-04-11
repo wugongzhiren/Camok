@@ -76,11 +76,14 @@ import com.hankvision.ipcsdk.Dllipcsdk;
 import com.hankvision.ipcsdk.JMultipleOsdInfo;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
+import com.zhuangliming.cam.model.MediaItem;
 import com.zhuangliming.cam.view.FloatWindowsService;
 import com.zhuangliming.cam.view.MediaPopView;
 import com.zhuangliming.cam.view.MyRender;
 import com.zhuangliming.cam.view.MySurfaceView;
 import com.zhuangliming.cam.view.OsdPopView;
+import com.zhuangliming.cam.view.PreViewPhotoPopView;
+import com.zhuangliming.cam.view.PreViewVideoPopView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -128,6 +131,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private byte[] pps = {0, 0, 0, 1, 104, -18, 60, -128/*,0,0,0,1,6,-27,1,91,-128*/};
 
     private Thread t1;
+    private boolean isConnected=false;
     MediaCodecDecoder mediaCodecDecoder; //解码器
     public static BlockingDeque<BufferInfo> bq;
     public BlockingDeque<BufferInfo> xbq;
@@ -139,8 +143,29 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            setOsdInfo();
-            osdParent.setVisibility(View.VISIBLE);
+            if(msg.arg1==1){
+                //显示图片
+                displayPhotoPop(((MediaItem)msg.obj).url);
+            }else if(msg.arg1==2){
+                //预览视频
+                //displayVideoPop(((MediaItem)msg.obj).url);
+                Intent intent=new Intent(MainActivity.this,PLVideoViewActivity.class);
+                intent.putExtra("videoPath",((MediaItem)msg.obj).url);
+                startActivity(intent);
+            }else if(msg.arg1==3){
+                //表示连接成功
+                isConnected=true;
+                showOSD();
+                camConnect = 1;
+                leftTool.setVisibility(View.VISIBLE);
+                rightTool.setVisibility(View.VISIBLE);
+                buttonConnect.setText("已连接");
+                buttonConnect.setBackgroundColor(0xff00ff00);
+            }
+            else {
+                setOsdInfo();
+                osdParent.setVisibility(View.VISIBLE);
+            }
         }
     };
     private ImageView imageViewSettings;
@@ -154,16 +179,15 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     private ImageView columImg;
     //private RadioButton radioButtonCamType;
     private TextureView textureView;
-    private MediaProjectionManager projectionManager;
-    private MediaProjection mediaProjection;
-    private ScreenService recordService;
-    private static int RECORD_REQUEST_CODE = 5;
+    private LinearLayout leftTool;
+    private LinearLayout rightTool;
     private LinearLayout parentView;
     private LinearLayout osdParent;
     private TextView taskNameTx;
     private TextView wellNameTx;
     private TextView checkInfoTx;
     private TextView checkCompanyTx;
+    private LinearLayout recordInfo;
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
@@ -201,7 +225,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         setContentView(R.layout.activity_main);
         initView();
         initEvent();
-        initData();
+        showOSD();
         //添加菜单
         initVideoList();
 
@@ -303,6 +327,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         checkInfoTx=findViewById(R.id.checkInfoTx);
         checkCompanyTx=findViewById(R.id.checkCompanyTx);
         imageViewOSD=findViewById(R.id.imageViewOSD);
+        leftTool=findViewById(R.id.leftTool);
+        rightTool=findViewById(R.id.rightTool);
+        recordInfo=findViewById(R.id.recordInfo);
         textureView.setSurfaceTextureListener(this);
         /*glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setRenderer(new MyRender());
@@ -316,18 +343,14 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // 此线程从阻塞队列poll buffer信息并送入解码
-        // 绑定surfaceview
-       /* mySurfaceView= new MySurfaceView(this,mediaCodecDecoder) {
+        new Handler().postDelayed(new Runnable() {
             @Override
-            protected void doDraw(Canvas canvas) {
-                Log.i("doDraw","mySurfaceView ondraw");
-                Paint mPaint = new Paint();
-                mPaint.setColor(Color.BLUE);
-                canvas.drawRect(new RectF(100, 100, 1000, 550), mPaint);
+            public void run() {
+                Log.i("connectIPC","connectIPC auto");
+                StartRaw(buttonConnect);
             }
-        };
-        frameLayout.addView(mySurfaceView);*/
+        },2000);
+        // 此线程从阻塞队列poll buffer信息并送入解码
     }
 
     @Override
@@ -377,9 +400,11 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
 
                 if(VideoThread.startReceive){
                     Toast.makeText(MainActivity.this,"结束录制",Toast.LENGTH_SHORT).show();
+                    recordInfo.setVisibility(View.GONE);
                     VideoThread.startReceive = false;
                 }else{
                     Toast.makeText(MainActivity.this,"开始录制",Toast.LENGTH_SHORT).show();
+                    recordInfo.setVisibility(View.VISIBLE);
                     VideoThread.startReceive = true;
                 }
 
@@ -390,8 +415,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         columImg.setOnClickListener(this);
     }
 
-    public void initData(){
-        if(OsdSharePreference.getInstance(this).getInt("osd",0)==1){
+    public void showOSD(){
+        if(isConnected&&OsdSharePreference.getInstance(this).getInt("osd",0)==1){
             setOsdInfo();
             osdParent.setVisibility(View.VISIBLE);
         }
@@ -444,7 +469,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
                     // 向解码器输入buffer
 
                     mediaCodecDecoder.input(temp.buffer, temp.len, System.nanoTime() / 1000);
-                    mediaCodecDecoder.output();
+                    mediaCodecDecoder.output(handler);
                 } catch (Exception e) {
 //                    e.printStackTrace();
                 }
@@ -478,9 +503,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         // 启动解码器
         // mediaCodecDecoder.start();
 
-        camConnect = 1;
-        buttonConnect.setText("已链接");
-        buttonConnect.setBackgroundColor(0xff00ff00);
+
        /* SetParam(osdInfoTx);*/
     }
 
@@ -723,6 +746,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     long lRawHandle = -1;
 
     public void StartRaw(View v) {
+        if(isConnected){
+            return;
+        }
+        buttonConnect.setText("正在连接");
         /*if (radioButtonCamType.isChecked()) {
             oldCam = 0;
         }*/
@@ -924,9 +951,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
      * @return
      */
     public boolean takeScreenShot() {
-        String imagePath = Environment.getExternalStorageDirectory() + File.separator + "screenshot"+System.currentTimeMillis()+".png";
+        String imagePath = Environment.getExternalStorageDirectory() + File.separator +"TUTK_PHOTO"+ File.separator +"screenshot_"+System.currentTimeMillis()+".png";
+        File file=new File(Environment.getExternalStorageDirectory() + File.separator +"TUTK_PHOTO");
+        if(!file.exists()){
+            file.mkdirs();
+        }
         Bitmap mScreenBitmap =drawText2Bitmap(textureView.getBitmap(),this);
-
         try {
             FileOutputStream out = new FileOutputStream(imagePath);
             mScreenBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -987,8 +1017,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        Log.i("TextureView","onSurfaceTextureAvailable");
         mSurface = new Surface(surface);
         // 配置解码器
+        Log.i("TextureView",mediaCodecDecoder==null?"空":"不为空");
         mediaCodecDecoder.configure(mSurface);
         System.out.println("配置解码器");
         // 启动解码器
@@ -998,18 +1030,19 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
+        Log.i("TextureView","onSurfaceTextureSizeChanged");
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        mediaCodecDecoder.release();
+        Log.i("TextureView","onSurfaceTextureDestroyed");
+        //mediaCodecDecoder.release();
         return false;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
+        Log.i("TextureView","onSurfaceTextureUpdated");
     }
 
 
@@ -1047,10 +1080,54 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
      */
     public void displayMediaPop(){
 
-        MediaPopView myPopupWindow = new MediaPopView(this);
+        MediaPopView myPopupWindow = new MediaPopView(this,handler);
         myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
         lightOff();
 
+        /**
+         * 消失时屏幕变亮
+         */
+        myPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+
+                layoutParams.alpha=1.0f;
+
+                getWindow().setAttributes(layoutParams);
+            }
+        });
+    }
+
+    /**
+     * 打开媒体文件库
+     */
+    public void displayPhotoPop(String url){
+
+        PreViewPhotoPopView myPopupWindow = new PreViewPhotoPopView(this,url);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        /**
+         * 消失时屏幕变亮
+         */
+        myPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+
+                layoutParams.alpha=1.0f;
+
+                getWindow().setAttributes(layoutParams);
+            }
+        });
+    }
+
+    /**
+     * 打开媒体文件库
+     */
+    public void displayVideoPop(String url){
+
+        PreViewVideoPopView myPopupWindow = new PreViewVideoPopView(this,url);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
         /**
          * 消失时屏幕变亮
          */

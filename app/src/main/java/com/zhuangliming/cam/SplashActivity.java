@@ -26,7 +26,7 @@ public class SplashActivity extends Activity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(SplashActivity.this,"启动",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(SplashActivity.this,"启动",Toast.LENGTH_SHORT).show();
                 Intent intent=new Intent(SplashActivity.this,MainActivity.class);
                 SplashActivity.this.startActivity(intent);
                 SplashActivity.this.finish();

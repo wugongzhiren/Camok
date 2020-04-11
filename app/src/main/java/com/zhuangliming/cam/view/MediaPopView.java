@@ -3,23 +3,31 @@ package com.zhuangliming.cam.view;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.zhuangliming.cam.OsdSharePreference;
 import com.zhuangliming.cam.R;
-import com.zhuangliming.cam.adapter.PhotoListAdapter;
+import com.zhuangliming.cam.adapter.MediaListAdapter;
+import com.zhuangliming.cam.model.MediaItem;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import static android.content.Context.WINDOW_SERVICE;
 
 
 public class MediaPopView extends PopupWindow {
@@ -28,26 +36,33 @@ public class MediaPopView extends PopupWindow {
     private View mContentView;
     private ImageView photo;
     private ImageView video;
+    private LinearLayout container;
+    private TextView goBackTx;
     private RecyclerView photoRv;
     private Handler mHandle;
-    private PhotoListAdapter photoListAdapter;
-    public MediaPopView(Context context) {
+    private int width;
+    private int height;
+    private MediaListAdapter mediaListAdapter;
+    private List<MediaItem> datas = new ArrayList<>();
+
+    public MediaPopView(Context context, Handler handler) {
         super(context);
-        this.mContext=context;
+        this.mContext = context;
+        this.mHandle = handler;
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mContentView = mInflater.inflate(R.layout.pop_media,null);
+        mContentView = mInflater.inflate(R.layout.pop_media, null);
 
         //设置View
         setContentView(mContentView);
-
+        getScreenWH();
         //设置宽与高
-        setWidth(1200);
-        setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        setWidth((int) (width*0.7));
+        setHeight((int) (height*0.7));
 
         /**
          * 设置进出动画
          */
-       // setAnimationStyle(R.style.MyPopupWindow);
+        // setAnimationStyle(R.style.MyPopupWindow);
 
         /**
          * 设置背景只有设置了这个才可以点击外边和BACK消失
@@ -80,7 +95,7 @@ public class MediaPopView extends PopupWindow {
                 /**
                  * 判断是不是点击了外部
                  */
-                if(event.getAction()==MotionEvent.ACTION_OUTSIDE){
+                if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
                     return true;
                 }
                 //不是点击外部
@@ -96,29 +111,79 @@ public class MediaPopView extends PopupWindow {
     }
 
     private void initView() {
-        photo=mContentView.findViewById(R.id.photo);
-        video=mContentView.findViewById(R.id.video);
-        photoRv=mContentView.findViewById(R.id.mediaRv);
-        photoListAdapter=new PhotoListAdapter(mContext,new ArrayList<>());
+        photo = mContentView.findViewById(R.id.photo);
+        video = mContentView.findViewById(R.id.video);
+        photoRv = mContentView.findViewById(R.id.mediaRv);
+        container=mContentView.findViewById(R.id.container);
+        goBackTx=mContentView.findViewById(R.id.backTv);
+        mediaListAdapter = new MediaListAdapter(mContext, new ArrayList<>());
         photoRv.setLayoutManager(new LinearLayoutManager(mContext));
-        photoRv.setAdapter(photoListAdapter);
+        photoRv.addItemDecoration(new DividerItemDecoration(mContext,DividerItemDecoration.VERTICAL));
+        photoRv.setAdapter(mediaListAdapter);
     }
 
 
     private void initListener() {
+        goBackTx.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(photoRv.getVisibility()==View.GONE){
+                    return;
+                }else{
+                    container.setVisibility(View.VISIBLE);
+                    photoRv.setVisibility(View.GONE);
+                }
+            }
+        });
         photo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               //加载图片路径
-                FileUtil.getScreenShotsName()
+                //加载图片路径
+                container.setVisibility(View.GONE);
+                photoRv.setVisibility(View.VISIBLE);
+                datas.clear();
+                datas = FileUtil.getPhotoItems();
+                mediaListAdapter.setDatas(datas);
             }
         });
         video.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                container.setVisibility(View.GONE);
+                photoRv.setVisibility(View.VISIBLE);
+                datas.clear();
+                datas = FileUtil.getVideoItems();
+                mediaListAdapter.setDatas(FileUtil.getVideoItems());
+            }
+        });
+        mediaListAdapter.setOnItemClickLitener(new MediaListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                Message message = Message.obtain();
+                if (datas.get(position).type == 0) {
+                    Toast.makeText(mContext, "点击了：" + datas.get(position).name, Toast.LENGTH_SHORT).show();
+                    message.arg1 = 1;
+                    message.obj = datas.get(position);
+                }
+                if (datas.get(position).type == 1) {
+                    Toast.makeText(mContext, "点击了：" + datas.get(position).name, Toast.LENGTH_SHORT).show();
+                    message.arg1 = 2;
+                    message.obj = datas.get(position);
+                }
+                mHandle.sendMessage(message);
 
-                dismiss();
             }
         });
     }
+    private void getScreenWH() {
+        //context的方法，获取windowManager
+        WindowManager windowManager = (WindowManager) mContext.getSystemService(WINDOW_SERVICE);
+        //获取屏幕对象
+        Display defaultDisplay = windowManager.getDefaultDisplay();
+        //获取屏幕的宽、高，单位是像素
+        width = defaultDisplay.getWidth();
+        height = defaultDisplay.getHeight();
+        Log.i("getScreenWH","width="+width+"height="+height);
+    }
 }
+

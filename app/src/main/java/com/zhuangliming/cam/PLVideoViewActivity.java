@@ -30,24 +30,24 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
     private TextView mStatInfoTextView;
     private MediaController mMediaController;
 
-    private boolean mIsLiveStreaming;
+    //private boolean mIsLiveStreaming;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pl_video_view);
 
-        //String videoPath = getIntent().getStringExtra("videoPath");
-        String videoPath= Environment.getExternalStorageDirectory().getAbsolutePath() + "/TUTK_VIDEOS/2020-04-10 09:45:48.mp4";
-        mIsLiveStreaming = getIntent().getIntExtra("liveStreaming", 1) == 1;
+        String videoPath = getIntent().getStringExtra("videoPath");
+        //String videoPath= Environment.getExternalStorageDirectory().getAbsolutePath() + "/TUTK_VIDEOS/2020-04-10 09:45:48.mp4";
+        //mIsLiveStreaming = getIntent().getIntExtra("liveStreaming", 1) == 1;
 
         mVideoView = findViewById(R.id.VideoView);
 
-        View loadingView = findViewById(R.id.LoadingView);
-        mVideoView.setBufferingIndicator(loadingView);
+       // View loadingView = findViewById(R.id.LoadingView);
+        //mVideoView.setBufferingIndicator(loadingView);
 
 
-        mStatInfoTextView = findViewById(R.id.StatInfoTextView);
+       /* mStatInfoTextView = findViewById(R.id.StatInfoTextView);*/
 
         // 1 -> hw codec enable, 0 -> disable [recommended]
         int codec = getIntent().getIntExtra("mediaCodec", AVOptions.MEDIA_CODEC_SW_DECODE);
@@ -56,14 +56,14 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         options.setInteger(AVOptions.KEY_PREPARE_TIMEOUT, 10 * 1000);
         // 1 -> hw codec enable, 0 -> disable [recommended]
         options.setInteger(AVOptions.KEY_MEDIACODEC, codec);
-        options.setInteger(AVOptions.KEY_LIVE_STREAMING, mIsLiveStreaming ? 1 : 0);
+        //options.setInteger(AVOptions.KEY_LIVE_STREAMING, mIsLiveStreaming ? 1 : 0);
         boolean disableLog = getIntent().getBooleanExtra("disable-log", false);
         // options.setString(AVOptions.KEY_DNS_SERVER, "127.0.0.1");
         options.setInteger(AVOptions.KEY_LOG_LEVEL, disableLog ? 5 : 0);
         boolean cache = getIntent().getBooleanExtra("cache", false);
-        if (!mIsLiveStreaming && cache) {
+        /*if (!mIsLiveStreaming && cache) {
             options.setString(AVOptions.KEY_CACHE_DIR, Config.DEFAULT_CACHE_DIR);
-        }
+        }*/
         boolean vcallback = getIntent().getBooleanExtra("video-data-callback", false);
         if (vcallback) {
             options.setInteger(AVOptions.KEY_VIDEO_DATA_CALLBACK, 1);
@@ -72,10 +72,10 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         if (acallback) {
             options.setInteger(AVOptions.KEY_AUDIO_DATA_CALLBACK, 1);
         }
-        if (!mIsLiveStreaming) {
-            int startPos = getIntent().getIntExtra("start-pos", 0);
-            options.setInteger(AVOptions.KEY_START_POSITION, startPos * 1000);
-        }
+
+        int startPos = getIntent().getIntExtra("start-pos", 0);
+        options.setInteger(AVOptions.KEY_START_POSITION, startPos * 1000);
+
         // options.setString(AVOptions.KEY_COMP_DRM_KEY,"cWoosgRk");
         mVideoView.setAVOptions(options);
 
@@ -92,7 +92,7 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         mVideoView.setLooping(getIntent().getBooleanExtra("loop", false));
 
         // You can also use a custom `MediaController` widget
-        mMediaController = new MediaController(this, !mIsLiveStreaming, mIsLiveStreaming);
+        mMediaController = new MediaController(this, true, false);
         //mMediaController.setOnClickSpeedAdjustListener(mOnClickSpeedAdjustListener);
         mVideoView.setMediaController(mMediaController);
     }
@@ -153,7 +153,7 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
                     break;
                 case PLOnInfoListener.MEDIA_INFO_VIDEO_BITRATE:
                 case PLOnInfoListener.MEDIA_INFO_VIDEO_FPS:
-                    updateStatInfo();
+                    //updateStatInfo();
                     break;
                 case PLOnInfoListener.MEDIA_INFO_CONNECTED:
                     Log.i(TAG, "Connected !");
@@ -213,9 +213,9 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         public void onCompletion() {
             Log.i(TAG, "Play Completed !");
            // Utils.showToastTips(PLVideoViewActivity.this, "Play Completed !");
-            if (!mIsLiveStreaming) {
+           // if (!mIsLiveStreaming) {
                 mMediaController.refreshProgress();
-            }
+           // }
             //finish();
         }
     };
@@ -273,7 +273,7 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         return new String(hexChars);
     }
 
-    private void updateStatInfo() {
+   /* private void updateStatInfo() {
         long bitrate = mVideoView.getVideoBitrate() / 1024;
         final String stat = bitrate + "kbps, " + mVideoView.getVideoFps() + "fps";
         runOnUiThread(new Runnable() {
@@ -282,5 +282,5 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
                 mStatInfoTextView.setText(stat);
             }
         });
-    }
+    }*/
 }

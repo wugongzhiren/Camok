@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"/>
     <EditText
         android:id="@+id/taskName"
-        android:padding="1dp"
+        android:padding="4dp"
         android:textColor="#FFF"
         android:textCursorDrawable="@drawable/cusor_bg"
         android:background="@drawable/osd_edit_selector"
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"/>
         <EditText
             android:id="@+id/wellName"
-            android:padding="1dp"
+            android:padding="4dp"
             android:textColor="#FFF"
             android:textCursorDrawable="@drawable/cusor_bg"
             android:background="@drawable/osd_edit_selector"
@@ -70,7 +70,7 @@
             android:layout_height="wrap_content"/>
         <EditText
             android:id="@+id/checkInfo"
-            android:padding="1dp"
+            android:padding="4dp"
             android:textColor="#FFF"
             android:textCursorDrawable="@drawable/cusor_bg"
             android:background="@drawable/osd_edit_selector"
@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"/>
         <EditText
             android:id="@+id/checkCompany"
-            android:padding="1dp"
+            android:padding="4dp"
             android:textColor="#FFF"
             android:textCursorDrawable="@drawable/cusor_bg"
             android:background="@drawable/osd_edit_selector"

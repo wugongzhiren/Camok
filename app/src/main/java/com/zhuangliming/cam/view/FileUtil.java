@@ -7,8 +7,10 @@ import com.zhuangliming.cam.model.MediaItem;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by ryze on 2016-5-26.
@@ -69,8 +71,32 @@ public class FileUtil {
 
     }
 
-    public List<MediaItem> getPhotoItems(){
+    public static List<MediaItem> getPhotoItems(){
+        String path= Environment.getExternalStorageDirectory() + File.separator +"TUTK_PHOTO";
+        File file=new File(path);
+        List<MediaItem> items=new ArrayList<>();
+        if(file.isDirectory()){
+           File[] photos= file.listFiles();
+           for(int i=0;i<photos.length;i++){
+               items.add(new MediaItem(photos[i].getAbsolutePath(),photos[i].getName(),0));
+           }
 
+        }
+        return items;
+    }
+    public static List<MediaItem> getVideoItems(){
+        String dirpath=Environment.getExternalStorageDirectory().getAbsolutePath() + "/TUTK_VIDEOS";
+        //SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.CHINA);
+        File file=new File(dirpath);
+        List<MediaItem> items=new ArrayList<>();
+        if(file.isDirectory()){
+            File[] videos= file.listFiles();
+            for(int i=0;i<videos.length;i++){
+                items.add(new MediaItem(videos[i].getAbsolutePath(),videos[i].getName(),1));
+            }
+
+        }
+        return items;
     }
 
 }

@@ -26,7 +26,7 @@
             android:background="#CA1A0D"
             android:textColor="#FFFFFF"
             android:onClick="StartRaw"
-            android:text="未链接"
+            android:text="未连接"
             android:textSize="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -58,7 +58,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginStart="16dp"
-            android:src="@drawable/editnormal"
+            android:src="@drawable/osd_selector"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -68,7 +68,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginStart="16dp"
-            android:src="@drawable/shezhinormal"
+            android:src="@drawable/media_selector"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/editOsd"
             app:layout_constraintTop_toTopOf="parent" />
@@ -120,6 +120,7 @@
             android:layout_marginLeft="16dp"
             android:layout_marginTop="10dp"
             android:orientation="vertical"
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
         <LinearLayout
@@ -186,10 +187,12 @@
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/leftTool"
             android:layout_marginLeft="16dp"
             android:layout_gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:orientation="vertical">
             <ImageButton
                 android:id="@+id/buttonLED2"
@@ -213,9 +216,11 @@
                 android:background="@drawable/xia" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/rightTool"
             android:layout_marginRight="16dp"
             android:layout_gravity="right|center_vertical"
             android:orientation="vertical"
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
@@ -239,7 +244,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/shexiang"
+                android:background="@drawable/record_selector"
                 />
 
             <ImageButton
@@ -247,8 +252,28 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/zhaopian"
+                android:background="@drawable/screencap_selector"
                />
+        </LinearLayout>
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/recordInfo"
+            android:layout_marginRight="12dp"
+            android:layout_marginBottom="12dp"
+            android:layout_gravity="bottom|right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_marginRight="8dp"
+                android:layout_gravity="center"
+                android:textColor="#fff"
+                android:text="正在录制"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="20dp"
+                android:background="@mipmap/record"/>
         </LinearLayout>
     </FrameLayout>
 
