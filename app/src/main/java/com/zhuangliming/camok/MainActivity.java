@@ -49,6 +49,7 @@ import com.hankvision.ipcsdk.JMultipleOsdInfo;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
 import com.zhuangliming.camok.model.MediaItem;
+import com.zhuangliming.camok.video.ProduceTextureView;
 import com.zhuangliming.camok.view.MediaPopView;
 import com.zhuangliming.camok.view.OsdPopView;
 import com.zhuangliming.camok.view.PreViewPhotoPopView;
@@ -63,7 +64,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity implements Dllipcsdk.CBRawData, TextureView.SurfaceTextureListener, View.OnClickListener {
+public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.OnClickListener,TextureView.SurfaceTextureListener {
     static {
         System.loadLibrary("native-lib");
     }
@@ -297,7 +298,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         leftTool=findViewById(R.id.leftTool);
         rightTool=findViewById(R.id.rightTool);
         recordInfo=findViewById(R.id.recordInfo);
-        textureView.setSurfaceTextureListener(this);
+        //textureView.setSurfaceTextureListener(this);
         /*glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setRenderer(new MyRender());
         *//*渲染方式，RENDERMODE_WHEN_DIRTY表示被动渲染，只有在调用requestRender或者onResume等方法时才会进行渲染。RENDERMODE_CONTINUOUSLY表示持续渲染*//*
@@ -380,6 +381,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
         editOsdImg.setOnClickListener(this);
         imageViewOSD.setOnClickListener(this);
         columImg.setOnClickListener(this);
+        textureView.setSurfaceTextureListener(this);
     }
 
     public void showOSD(){
@@ -728,7 +730,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
             bq = new LinkedBlockingDeque<>();// videobuffer信息存储到这里 解码器从此阻塞队列poll video的信息
             (new Thread() {
                 public void run() {
-                    int stu = AVAPIsClient.start(MainActivity.this.UID, bq);
+                    int stu = AVAPIsClient.start(MainActivity.this.UID, bq,MainActivity.this);
                     System.out.println("x连接线程中断++++++");
                 }
             }).start();
@@ -769,7 +771,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, Textu
     public void StartPlay(View v) {
 
         if (lPlay == -1) {
-            //SurfaceView surfaceView = findViewById(R.id.surfaceView);
+          //SurfaceView surfaceView = findViewById(R.id.surfaceView);
             if (mSurface != null) {
                 lPlay = Dllipcsdk.IPCNET_StartRawPlay(strIp, nVideoPort, 0, "admin", "admin", 1, mSurface);
             }
