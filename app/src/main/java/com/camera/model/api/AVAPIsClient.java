@@ -1,6 +1,8 @@
 package com.camera.model.api;
 
 
+import android.content.Context;
+import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
@@ -11,7 +13,6 @@ import com.tutk.IOTC.IOTCAPIs;
 
 import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;
-import java.util.logging.Handler;
 
 public class AVAPIsClient {
 

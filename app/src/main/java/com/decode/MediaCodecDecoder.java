@@ -167,17 +167,18 @@ public class MediaCodecDecoder {
 
 
     // 解码数据到surface
-    private  boolean isFirstOpenConnected=true;
-    public int output(Handler handler){
+   // private  boolean isFirstOpenConnected=true;
+    public int output(){
         mBI = new MediaCodec.BufferInfo();
         int i = mMC.dequeueOutputBuffer(mBI, oBUFFER_TIMEOUT);// 把转码后的数据存到mBI
         while(i >= 0){
-            if(isFirstOpenConnected){
-                Message message=Message.obtain();
+           ByteBuffer outputBuffer =mMC.getOutputBuffers()[i];
+           /* if(isFirstOpenConnected){
+              *//*  Message message=Message.obtain();
                 message.arg1=3;
-                handler.sendMessage(message);
-            }
-            isFirstOpenConnected=false;
+                handler.sendMessage(message);*//*
+            }*/
+           // isFirstOpenConnected=false;
            // ByteBuffer outputBuffer =mMC.getOutputBuffers()[i];
             /*writeSampleData(videoTrackIndex,mBI,outputBuffer);
             if(j>500){
@@ -235,7 +236,9 @@ public class MediaCodecDecoder {
         flush();
         mMC.stop();
         mMC.release();
-//        mMC = null;
+        this.surface.release();
+        this.surface=null;
+        mMC = null;
         Log.d("release","successful release");
     }
     public void releaseMuxer() {

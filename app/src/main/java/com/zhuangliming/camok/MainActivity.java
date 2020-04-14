@@ -48,8 +48,11 @@ import com.hankvision.ipcsdk.Dllipcsdk;
 import com.hankvision.ipcsdk.JMultipleOsdInfo;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
+import com.zhuangliming.FFmpegKit;
 import com.zhuangliming.camok.model.MediaItem;
+import com.zhuangliming.camok.video.FFmpegCommandCenter;
 import com.zhuangliming.camok.video.ProduceTextureView;
+import com.zhuangliming.camok.video.ThreadPoolUtils;
 import com.zhuangliming.camok.view.MediaPopView;
 import com.zhuangliming.camok.view.OsdPopView;
 import com.zhuangliming.camok.view.PreViewPhotoPopView;
@@ -59,7 +62,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -129,6 +135,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 rightTool.setVisibility(View.VISIBLE);
                 buttonConnect.setText("已连接");
                 buttonConnect.setBackgroundColor(0xff00ff00);
+            }else if(msg.arg1==4){
+                //录制完成
+                if(OsdSharePreference.getInstance(MainActivity.this).getInt("osd",0)==1){
+                    //显示字幕，水印处理
+                    //addOsdInfoToVideo((String) msg.obj);
+                }
             }
             else {
                 setOsdInfo();
@@ -306,11 +318,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         //实例化解码器
         mediaCodecDecoder = new MediaCodecDecoder();
         // 初始化
-        try {
-            mediaCodecDecoder.init();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -390,6 +398,44 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             osdParent.setVisibility(View.VISIBLE);
         }
     }
+
+    private void addOsdInfoToVideo(String videoUrl){
+        String textMark="测试文字";
+         final String dirpath =
+                Environment.getExternalStorageDirectory().getAbsolutePath() + "/TUTK_VIDEOS";
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.CHINA);
+        final String path = dirpath + "/" + df.format(new Date()) + ".mp4";
+        String[] commands= FFmpegCommandCenter.addTextMark(textMark,videoUrl,path);
+        final String[] _commands=commands;
+        Runnable compoundRun=new Runnable() {
+            @Override
+            public void run() {
+                FFmpegKit.execute(_commands, new FFmpegKit.KitInterface() {
+                    @Override
+                    public void onStart() {
+                        Log.d("FFmpegLog LOGCAT","FFmpeg 命令行开始执行了...");
+                        /*Message msg = new Message();
+                        msg.what = ENCODEING;
+                        mHandler.sendMessage(msg);*/
+                    }
+
+                    @Override
+                    public void onProgress(int progress) {
+                        Log.d("FFmpegLog LOGCAT","done com"+"FFmpeg 命令行执行进度..."+progress);
+                    }
+
+                    @Override
+                    public void onEnd(int result) {
+                        Log.d("FFmpegLog LOGCAT","FFmpeg 命令行执行完成...");
+                       /* Message msg = new Message();
+                        msg.what = ENCODED;
+                        mHandler.sendMessage(msg);*/
+                    }
+                });
+            }
+        };
+        ThreadPoolUtils.execute(compoundRun);
+    }
     //辅助灯
     private boolean led2 = false;
 
@@ -436,9 +482,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                         continue;
                     }
                     // 向解码器输入buffer
-
+                    SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.CHINA);
+                    Log.i("时间入",df.format(new Date()));
                     mediaCodecDecoder.input(temp.buffer, temp.len, System.nanoTime() / 1000);
-                    mediaCodecDecoder.output(handler);
+
+                    mediaCodecDecoder.output();
+                    Log.i("时间出",df.format(new Date()));
                 } catch (Exception e) {
 //                    e.printStackTrace();
                 }
@@ -730,7 +779,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             bq = new LinkedBlockingDeque<>();// videobuffer信息存储到这里 解码器从此阻塞队列poll video的信息
             (new Thread() {
                 public void run() {
-                    int stu = AVAPIsClient.start(MainActivity.this.UID, bq,MainActivity.this);
+                    int stu = AVAPIsClient.start(MainActivity.this.UID, bq);
                     System.out.println("x连接线程中断++++++");
                 }
             }).start();
@@ -987,6 +1036,11 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.i("TextureView","onSurfaceTextureAvailable");
+        try {
+            mediaCodecDecoder.init();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         mSurface = new Surface(surface);
         // 配置解码器
         Log.i("TextureView",mediaCodecDecoder==null?"空":"不为空");
@@ -1005,7 +1059,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         Log.i("TextureView","onSurfaceTextureDestroyed");
-        //mediaCodecDecoder.release();
+        mediaCodecDecoder.release();
         return false;
     }
 
@@ -1020,7 +1074,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mediaCodecDecoder.release();
+        Log.i("MainActivity","onDestroy");
+        //mediaCodecDecoder.release();
+       // t1.interrupt();
+
     }
 
     public void displayDialog(){

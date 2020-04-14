@@ -5,6 +5,8 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 
 import com.decode.tools.AvcUtils;
 
@@ -97,6 +99,10 @@ public class Muxer {
 //                生成.MP4
                 mediaMuxer.stop();
                 mediaMuxer.release();
+                Message message=Message.obtain();
+                message.obj=path;
+                message.arg1=4;
+                //handler.sendMessage(message);
             }
         }
     }

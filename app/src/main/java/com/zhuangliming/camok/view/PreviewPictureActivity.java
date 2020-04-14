@@ -19,7 +19,7 @@ import com.zhuangliming.camok.R;
  */
 public class PreviewPictureActivity extends FragmentActivity implements GlobalScreenshot.onScreenShotListener {
 
-    public static final Intent newIntent(Context context) {
+    public static Intent newIntent(Context context) {
         Intent intent = new Intent(context, PreviewPictureActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return intent;

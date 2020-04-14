@@ -4,10 +4,10 @@ import java.util.Arrays;
 
 public class Audio {
     private short[][] audioWithPCM;
-    private final int MAX_AUDIO_LENGTH = 20000;
     private int audioLength;
 
     public Audio() {
+        int MAX_AUDIO_LENGTH = 20000;
         audioWithPCM = new short[MAX_AUDIO_LENGTH][];
         audioLength = 0;
     }

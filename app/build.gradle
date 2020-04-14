@@ -20,6 +20,7 @@ android {
     sourceSets {
         main {
             jniLibs.srcDirs = ['libs']
+            jni.srcDirs = []
         }
     }
     compileOptions {
@@ -37,8 +38,11 @@ dependencies {
     implementation 'com.github.chrisbanes:PhotoView:2.0.0'
     implementation 'com.github.bumptech.glide:glide:4.9.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
+    implementation 'com.github.ChillingVan:android-openGL-canvas:v1.5.1.0'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.2'
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
     implementation files('libs/pldroid-player-2.1.9.jar')
 }

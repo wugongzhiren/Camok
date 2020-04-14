@@ -37,7 +37,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.zhuangliming.camok.PLVideoViewActivity">
+        <activity android:name="com.zhuangliming.camok.PLVideoViewActivity"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         </activity>
         <service android:name="com.zhuangliming.camok.ScreenService"></service>
