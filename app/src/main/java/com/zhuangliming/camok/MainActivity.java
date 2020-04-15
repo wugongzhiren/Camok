@@ -454,7 +454,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
      */
     int camConnect = 0;
 
-    public void connectIPC() {
+    /*public void connectIPC() {
         //--------------------------------------- 解码 ------------------------------------
         // 此线程从阻塞队列poll buffer信息并送入解码器
         t1 = new Thread(() -> {
@@ -486,7 +486,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
 
         // surfaceView绘制完成后 配置解码器并启动
-      /*  glSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+      *//*  glSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder surfaceHolder) {
                 // 配置解码器
@@ -503,7 +503,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                 mediaCodecDecoder.release();
             }
-        });*/
+        });*//*
 
         // mediaCodecDecoder.configure(surfaceViewDecode.getHolder().getSurface());
         //System.out.println("配置解码器");
@@ -511,9 +511,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         // mediaCodecDecoder.start();
 
 
-       /* SetParam(osdInfoTx);*/
+       *//* SetParam(osdInfoTx);*//*
     }
-
+*/
 
     public void onClickOpen(View view) throws IOException {
 
@@ -521,7 +521,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             Toast.makeText(MainActivity.this, "摄像机已经链接", Toast.LENGTH_SHORT).show();
             return;
         }
-        connectIPC();
+        //connectIPC();
         //buttonConnect.setBackgroundColor(0xff0320);
         camConnect = 1;
     }
