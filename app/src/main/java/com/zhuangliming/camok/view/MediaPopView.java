@@ -23,6 +23,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.zhuangliming.camok.R;
 import com.zhuangliming.camok.adapter.MediaListAdapter;
 import com.zhuangliming.camok.model.MediaItem;
+import com.zhuangliming.camok.model.MessageEvent;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,16 +42,14 @@ public class MediaPopView extends PopupWindow {
     private LinearLayout container;
     private TextView goBackTx;
     private RecyclerView photoRv;
-    private Handler mHandle;
     private int width;
     private int height;
     private MediaListAdapter mediaListAdapter;
     private List<MediaItem> datas = new ArrayList<>();
 
-    public MediaPopView(Context context, Handler handler) {
+    public MediaPopView(Context context) {
         super(context);
-        this.mContext = context;
-        this.mHandle = handler;
+        this.mContext = context.getApplicationContext();
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mContentView = mInflater.inflate(R.layout.pop_media, null);
 
@@ -159,18 +160,16 @@ public class MediaPopView extends PopupWindow {
         mediaListAdapter.setOnItemClickLitener(new MediaListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                Message message = Message.obtain();
+               // Message message = Message.obtain();
                 if (datas.get(position).type == 0) {
-                    Toast.makeText(mContext, "点击了：" + datas.get(position).name, Toast.LENGTH_SHORT).show();
-                    message.arg1 = 1;
-                    message.obj = datas.get(position);
+                    //Toast.makeText(mContext, "点击了：" + datas.get(position).name, Toast.LENGTH_SHORT).show();
+                    EventBus.getDefault().post(new MessageEvent(MessageEvent.SHOW_PHOTO,datas.get(position).url));
                 }
                 if (datas.get(position).type == 1) {
-                    Toast.makeText(mContext, "点击了：" + datas.get(position).name, Toast.LENGTH_SHORT).show();
-                    message.arg1 = 2;
-                    message.obj = datas.get(position);
+                   // Toast.makeText(mContext, "点击了：" + datas.get(position).name, Toast.LENGTH_SHORT).show();
+                    EventBus.getDefault().post(new MessageEvent(MessageEvent.PREVIEW_VIDEO,datas.get(position).url));
                 }
-                mHandle.sendMessage(message);
+               // mHandle.sendMessage(message);
 
             }
         });

@@ -6,13 +6,18 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.camera.camerawithtutk.VideoThread;
+import com.camera.model.SaveFrames;
+import com.decode.tools.BufferInfo;
 import com.tutk.IOTC.AVAPIs;
 import com.tutk.IOTC.IOTCAPIs;
+import com.zhuangliming.camok.model.MessageEvent;
 
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class AVAPIsClient {
 
@@ -23,6 +28,7 @@ public class AVAPIsClient {
     private static int avIndex = -1; // avClientStart的返回值
     private static Thread audioThread;
     private static Thread videoThread;
+    public static boolean isStarted = false;
     /**
      * 修改视频清晰度的常量
      */
@@ -45,12 +51,11 @@ public class AVAPIsClient {
     /**
      * 开始连接设备
      */
-    public static int start(String uid, BlockingDeque bq) {
+    public static int start() {
 
         //username = user.getUsername();
         //password = user.getPassword();
         //AVAPIsClient.uid =user.getUID();
-        Handler ipcHandler;
         System.out.println("开始连接...");
         // 初始化IOTC(物联网)端，需在调用任何IOTC相关函数前调用次函数,此函数利用ip连接主机
         // 参数0代表随机选取UDP端口
@@ -82,24 +87,25 @@ public class AVAPIsClient {
         avIndex = AVAPIs.avClientStart(sid, "admin", "123456", 20000, servType, 0);
         AVAPIsClient.avIndex = avIndex;
         if (avIndex < 0) {
-            System.out.printf("avClientStart 连接失败[%d]\n", avIndex);
+            Log.i("Decode","连接失败");
+            //System.out.printf("avClientStart 连接失败[%d]\n", avIndex);
             return -3;
         } else {
-            System.out.println("avClientStart 连接成功 " + avIndex);
+            Log.i("Decode","连接成功");
+            EventBus.getDefault().post(new MessageEvent(MessageEvent.CONNECT_SUCCESS,null));
         }
         if (startIpcamStream(avIndex)) {
-            System.out.println("startVideoThread");
-            startVideoThread(bq);
-            videoThread.start();
-            Message message = new Message();
 
-            try {
+            System.out.println("startVideoThread");
+            startVideoThread();
+            videoThread.start();
+            isStarted=true;
+          /*  try {
                 videoThread.join();
             } catch (InterruptedException e) {
-                System.out.println("e.getMessage()");
                 System.out.println(e.getMessage());
                 return -4;
-            }
+            }*/
         }
         return 0;
     }
@@ -137,9 +143,9 @@ public class AVAPIsClient {
 
         return true;
     }
-    public static void startVideoThread(BlockingDeque bq) {
+    public static void startVideoThread() {
         if (startIpcamStream(avIndex)) {
-            videoThread = new Thread(new VideoThread(avIndex,bq),
+            videoThread = new Thread(new VideoThread(avIndex),
                    "Video-Thread");
             //videoThread.start();
         }
@@ -305,5 +311,112 @@ public class AVAPIsClient {
         System.out.println("PCM:" + Arrays.toString(pcmBuffer));
         return pcmBuffer;
     }
+
+    public static class VideoThread implements Runnable {
+        static final int VIDEO_BUF_SIZE = 200000;
+        static final int FRAME_INFO_SIZE = 16;
+
+        private int avIndex;
+        public VideoThread(int avIndex) {
+            this.avIndex = avIndex;
+        }
+
+        @Override
+        public void run() {
+            if(Thread.interrupted()){
+                AVAPIsClient.isStarted=false;
+                return;
+            }
+            System.out.printf("[%s] Start\n",
+                    Thread.currentThread().getName());
+            Log.i("Decode","VideoThread启动，获取视频流");
+            AVAPIs av = new AVAPIs();
+            byte[] frameInfo = new byte[FRAME_INFO_SIZE];
+            byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
+            int[] outBufSize = new int[1];
+            int[] outFrameSize = new int[1];
+            int[] outFrmInfoBufSize = new int [1];
+            SaveFrames saveFrames = new SaveFrames();
+            while (true) {
+                int[] frameNumber = new int[1];
+                int ret = av.avRecvFrameData2(avIndex, videoBuffer,
+                        VIDEO_BUF_SIZE, outBufSize, outFrameSize,
+                        frameInfo, FRAME_INFO_SIZE,
+                        outFrmInfoBufSize, frameNumber);
+                Log.i("视频流结果",ret+"");
+                if (ret == AVAPIs.AV_ER_DATA_NOREADY) {
+                    try {
+                        Thread.sleep(30);
+                        continue;
+                    }
+                    catch (InterruptedException e) {
+                        System.out.println(e.getMessage());
+                        break;
+                    }
+                }
+                else if (ret == AVAPIs.AV_ER_LOSED_THIS_FRAME) {
+                    System.out.printf("[%s] Lost video frame number[%d]\n",
+                            Thread.currentThread().getName(), frameNumber[0]);
+                    continue;
+                }
+                else if (ret == AVAPIs.AV_ER_INCOMPLETE_FRAME) {
+                    System.out.printf("[%s] Incomplete video frame number[%d]\n",
+                            Thread.currentThread().getName(), frameNumber[0]);
+                    continue;
+                }
+                else if (ret == AVAPIs.AV_ER_SESSION_CLOSE_BY_REMOTE) {
+                    System.out.printf("[%s] AV_ER_SESSION_CLOSE_BY_REMOTE\n",
+                            Thread.currentThread().getName());
+                    break;
+                }
+                else if (ret == AVAPIs.AV_ER_REMOTE_TIMEOUT_DISCONNECT) {
+                    System.out.printf("[%s] AV_ER_REMOTE_TIMEOUT_DISCONNECT\n",
+                            Thread.currentThread().getName());
+                    break;
+                }
+                else if (ret == AVAPIs.AV_ER_INVALID_SID) {
+                    System.out.printf("[%s] Session cant be used anymore\n",
+                            Thread.currentThread().getName());
+                    break;
+                }
+                Log.i("Decode","Video实际长度"+outFrameSize[0]);
+                // Now the data is ready in videoBuffer[0 ... ret - 1]
+                // Do something here
+                sendFrame(new BufferInfo(outFrameSize[0], videoBuffer));
+                //---------------------------------------------------------------------
+                /*if (startReceive) {
+                    saveFrames.saveFrames(videoBuffer, frameInfo, ret);
+                } else {
+                    saveFrames.stopReceive();
+                }*/
+            }
+
+            System.out.printf("[%s] Exit\n",
+                    Thread.currentThread().getName());
+        }
+    }
+
+    public static BlockingDeque blockingDeque=new LinkedBlockingDeque();
+    public static BufferInfo readFrame(){
+        try {
+            Log.i("Decode","buffer出队");
+            return (BufferInfo) blockingDeque.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.i("Decode","buffer出队出错");
+            return null;
+        }
+    }
+
+    public static void sendFrame(BufferInfo bi){
+        try {
+            Log.i("Decode","buffer入队");
+            blockingDeque.put(bi);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
 

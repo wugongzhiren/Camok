@@ -42,6 +42,7 @@ import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.VideoInfo;
 import com.camera.model.api.AVAPIsClient;
 import com.decode.MediaCodecDecoder;
+import com.decode.VideoDecoder;
 import com.decode.tools.AvcUtils;
 import com.decode.tools.BufferInfo;
 import com.hankvision.ipcsdk.Dllipcsdk;
@@ -50,6 +51,7 @@ import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
 import com.zhuangliming.FFmpegKit;
 import com.zhuangliming.camok.model.MediaItem;
+import com.zhuangliming.camok.model.MessageEvent;
 import com.zhuangliming.camok.video.FFmpegCommandCenter;
 import com.zhuangliming.camok.video.ProduceTextureView;
 import com.zhuangliming.camok.video.ThreadPoolUtils;
@@ -57,6 +59,10 @@ import com.zhuangliming.camok.view.MediaPopView;
 import com.zhuangliming.camok.view.OsdPopView;
 import com.zhuangliming.camok.view.PreViewPhotoPopView;
 import com.zhuangliming.camok.view.PreViewVideoPopView;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -113,7 +119,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     private Button buttonConnect;
     private ImageView imageViewLed2;
     private ImageView imageViewOSD;
-    public  Handler handler=new Handler(){
+    /*public  Handler handler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -147,7 +153,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 osdParent.setVisibility(View.VISIBLE);
             }
         }
-    };
+    };*/
     private ImageView imageViewSettings;
     private ImageButton recordBt;
     private ImageView editOsdImg;
@@ -203,6 +209,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //注册EventBus
+        EventBus.getDefault().register(this);
         initView();
         initEvent();
         showOSD();
@@ -374,14 +382,15 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             @Override
             public void onClick(View v) {
 
-                if(VideoThread.startReceive){
+                if(decoder.isNeedRecord){
                     Toast.makeText(MainActivity.this,"结束录制",Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.GONE);
-                    VideoThread.startReceive = false;
+                    decoder.stopRecord();
                 }else{
                     Toast.makeText(MainActivity.this,"开始录制",Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.VISIBLE);
-                    VideoThread.startReceive = true;
+                    decoder.startRecord();
+
                 }
 
             }
@@ -400,41 +409,21 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     }
 
     private void addOsdInfoToVideo(String videoUrl){
+
         String textMark="测试文字";
          final String dirpath =
                 Environment.getExternalStorageDirectory().getAbsolutePath() + "/TUTK_VIDEOS";
         SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.CHINA);
-        final String path = dirpath + "/" + df.format(new Date()) + ".mp4";
+        final String path = dirpath + "/" + df.format(new Date()) + "111.mp4";
         String[] commands= FFmpegCommandCenter.addTextMark(textMark,videoUrl,path);
         final String[] _commands=commands;
-        Runnable compoundRun=new Runnable() {
+        FFmpegKit.execute(_commands);
+        /*Runnable compoundRun=new Runnable() {
             @Override
             public void run() {
-                FFmpegKit.execute(_commands, new FFmpegKit.KitInterface() {
-                    @Override
-                    public void onStart() {
-                        Log.d("FFmpegLog LOGCAT","FFmpeg 命令行开始执行了...");
-                        /*Message msg = new Message();
-                        msg.what = ENCODEING;
-                        mHandler.sendMessage(msg);*/
-                    }
 
-                    @Override
-                    public void onProgress(int progress) {
-                        Log.d("FFmpegLog LOGCAT","done com"+"FFmpeg 命令行执行进度..."+progress);
-                    }
-
-                    @Override
-                    public void onEnd(int result) {
-                        Log.d("FFmpegLog LOGCAT","FFmpeg 命令行执行完成...");
-                       /* Message msg = new Message();
-                        msg.what = ENCODED;
-                        mHandler.sendMessage(msg);*/
-                    }
-                });
-            }
-        };
-        ThreadPoolUtils.execute(compoundRun);
+        };*/
+       // ThreadPoolUtils.execute(compoundRun);
     }
     //辅助灯
     private boolean led2 = false;
@@ -775,15 +764,16 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         if (oldCam == 0) {
             getUserInfo();
             saveUserInfo();
-
+/*
             bq = new LinkedBlockingDeque<>();// videobuffer信息存储到这里 解码器从此阻塞队列poll video的信息
             (new Thread() {
                 public void run() {
                     int stu = AVAPIsClient.start(MainActivity.this.UID, bq);
                     System.out.println("x连接线程中断++++++");
                 }
-            }).start();
-            connectIPC();
+            }).start();*/
+
+            //connectIPC();
             return;
         }
         System.out.println("StartRaw");
@@ -821,9 +811,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
         if (lPlay == -1) {
           //SurfaceView surfaceView = findViewById(R.id.surfaceView);
-            if (mSurface != null) {
+            /*if (mSurface != null) {
                 lPlay = Dllipcsdk.IPCNET_StartRawPlay(strIp, nVideoPort, 0, "admin", "admin", 1, mSurface);
-            }
+            }*/
         }
     }
 
@@ -1004,9 +994,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
             Resources resources = mContext.getResources();
             float scale = resources.getDisplayMetrics().density;
-            android.graphics.Bitmap.Config bitmapConfig = bitmap.getConfig();
+            Bitmap.Config bitmapConfig = bitmap.getConfig();
             // set default bitmap config if none
-            if (bitmapConfig == null) bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+            if (bitmapConfig == null) bitmapConfig = Bitmap.Config.ARGB_8888;
             // resource bitmaps are imutable, so we need to convert it to mutable one
             bitmap = bitmap.copy(bitmapConfig, true);
 
@@ -1031,24 +1021,26 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         }
     }
 
-    private Surface mSurface;
-
+    //private Surface mSurface;
+    public VideoDecoder decoder;
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        Log.i("TextureView","onSurfaceTextureAvailable");
-        try {
+        Log.i("Decode","onSurfaceTextureAvailable");
+       /* try {
             mediaCodecDecoder.init();
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        mSurface = new Surface(surface);
-        // 配置解码器
+        }*/
+        decoder=new VideoDecoder(new Surface(surface));
+        //mSurface = new Surface(surface);
+       /* // 配置解码器
         Log.i("TextureView",mediaCodecDecoder==null?"空":"不为空");
         mediaCodecDecoder.configure(mSurface);
         System.out.println("配置解码器");
         // 启动解码器
-        mediaCodecDecoder.start();
-        System.out.println("启动解码器");
+        mediaCodecDecoder.start();*/
+        decoder.start();
+        Log.i("Decode","decoder.start()");
     }
 
     @Override
@@ -1059,7 +1051,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         Log.i("TextureView","onSurfaceTextureDestroyed");
-        mediaCodecDecoder.release();
+       // decoder.stop();
         return false;
     }
 
@@ -1075,6 +1067,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     protected void onDestroy() {
         super.onDestroy();
         Log.i("MainActivity","onDestroy");
+        //注销事件
+        EventBus.getDefault().unregister(this);
         //mediaCodecDecoder.release();
        // t1.interrupt();
 
@@ -1082,7 +1076,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     public void displayDialog(){
 
-        OsdPopView myPopupWindow = new OsdPopView(this,handler);
+        OsdPopView myPopupWindow = new OsdPopView(this);
         myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
         lightOff();
 
@@ -1106,7 +1100,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
      */
     public void displayMediaPop(){
 
-        MediaPopView myPopupWindow = new MediaPopView(this,handler);
+        MediaPopView myPopupWindow = new MediaPopView(this);
         myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
         lightOff();
 
@@ -1182,4 +1176,44 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     }
 
+    /**
+     * 处理eventbus消息
+     * @param messageEvent
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onHandleEventMessage(MessageEvent messageEvent){
+        if(messageEvent.getMessage()==MessageEvent.SHOW_PHOTO){
+            //显示图片
+            Log.i("onHandleEventMessage","收到了显示图片");
+            displayPhotoPop((String) messageEvent.getObj());
+        }else if(messageEvent.getMessage()==MessageEvent.PREVIEW_VIDEO){
+            //预览视频
+            decoder.stop();
+            //displayVideoPop(((MediaItem)msg.obj).url);
+            Intent intent=new Intent(MainActivity.this,PLVideoViewActivity.class);
+            intent.putExtra("videoPath",(String) messageEvent.getObj());
+            startActivity(intent);
+        }else if(messageEvent.getMessage()==MessageEvent.CONNECT_SUCCESS){
+            //表示连接成功
+            isConnected=true;
+            showOSD();
+            camConnect = 1;
+            leftTool.setVisibility(View.VISIBLE);
+            rightTool.setVisibility(View.VISIBLE);
+            buttonConnect.setText("已连接");
+            buttonConnect.setBackgroundColor(0xff00ff00);
+        }else if(messageEvent.getMessage()==MessageEvent.RECORD_COMPLETE){
+            //录制完成
+            if(OsdSharePreference.getInstance(MainActivity.this).getInt("osd",0)==1){
+                //显示字幕，水印处理
+                addOsdInfoToVideo((String) messageEvent.getObj());
+            }
+        }else if(messageEvent.getMessage()==MessageEvent.SHOW_OSD){
+            setOsdInfo();
+            osdParent.setVisibility(View.VISIBLE);
+        }
+        else {
+            return;
+        }
+    }
 }

@@ -15,6 +15,9 @@ import android.widget.TextView;
 
 import com.zhuangliming.camok.OsdSharePreference;
 import com.zhuangliming.camok.R;
+import com.zhuangliming.camok.model.MessageEvent;
+
+import org.greenrobot.eventbus.EventBus;
 
 import static android.content.Context.WINDOW_SERVICE;
 
@@ -31,14 +34,11 @@ public class OsdPopView extends PopupWindow {
     private EditText checkCompanyEdit;
     private int width;
     private int height;
-    private Handler mHandle;
-    public OsdPopView(Context context, Handler handler) {
+    public OsdPopView(Context context) {
         super(context);
-        this.mContext=context;
-        this.mHandle=handler;
+        this.mContext=context.getApplicationContext();
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mContentView = mInflater.inflate(R.layout.layout_dialog,null);
-
         //设置View
         setContentView(mContentView);
         getScreenWH();
@@ -125,7 +125,7 @@ public class OsdPopView extends PopupWindow {
                 OsdSharePreference.getInstance(mContext).putString("wellname",wellNameEdit.getText().toString());
                 OsdSharePreference.getInstance(mContext).putString("checkinfo",checkInfoEdit.getText().toString());
                 OsdSharePreference.getInstance(mContext).putString("checkcompany",checkCompanyEdit.getText().toString());
-                mHandle.sendEmptyMessage(0);
+                EventBus.getDefault().post(new MessageEvent(MessageEvent.SHOW_OSD,null));
                 dismiss();
             }
         });

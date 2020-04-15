@@ -38,6 +38,7 @@ public class SaveFrames {
     //当ArrayList非空，执行Muxer后清空ArrayList
     public void stopReceive() {
         canStart = false;
+        Log.i("SaveFrames","frames大小="+frames.size());
         if (frames.size() != 0) {
             Muxer muxer = new Muxer();
             muxer.muxer(frames);

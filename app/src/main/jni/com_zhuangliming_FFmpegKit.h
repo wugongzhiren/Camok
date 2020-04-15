@@ -2,8 +2,8 @@
 #include <jni.h>
 /* Header for class codepig_ffmpegcldemo_FFmpegKit */
 
-#ifndef _Included_codepig_ffmpegcldemo_FFmpegKit
-#define _Included_codepig_ffmpegcldemo_FFmpegKit
+#ifndef _Included_com_zhuangliming_FFmpegKit
+#define _Included_com_zhuangliming_FFmpegKit
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +12,7 @@ extern "C" {
  * Method:    run
  * Signature: ([Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_codepig_ffmpegcldemo_FFmpegKit_run
+JNIEXPORT jint JNICALL Java_com_zhuangliming_FFmpegKit_run
   (JNIEnv *, jclass, jobjectArray);
 
 #ifdef __cplusplus

@@ -1,6 +1,7 @@
 package com.zhuangliming;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 public class FFmpegKit {
     public interface KitInterface{
@@ -19,7 +20,11 @@ public class FFmpegKit {
     }
 
     public static void execute(String[] commands, final KitInterface kitIntenrface){
-        new AsyncTask<String[],Integer,Integer>(){
+        Log.i("FFmpegKit","命令开始");
+        int ret=run(commands);
+        Log.i("FFmpegKit","命令结束"+ret);
+        return;
+        /*new AsyncTask<String[],Integer,Integer>(){
             @Override
             protected void onPreExecute() {
                 if(kitIntenrface != null){
@@ -42,7 +47,7 @@ public class FFmpegKit {
                     kitIntenrface.onEnd(integer);
                 }
             }
-        }.execute(commands);
+        }.execute(commands);*/
     }
 
     public native static int run(String[] commands);
