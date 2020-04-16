@@ -5,8 +5,10 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Surface;
 
 import com.camera.model.SaveFrames;
+import com.decode.EncoderVideoRunnable;
 import com.decode.tools.BufferInfo;
 import com.hankvision.ipcsdk.Dllipcsdk;
 import com.hankvision.ipcsdk.JOSDInfo;
@@ -58,15 +60,20 @@ public class AVAPIsClient {
     /**
      * 开始连接设备
      */
-    public static int start(Context context) {
+    private static Context mContext;
 
+    private static EncoderVideoRunnable videoRunnable;
+    public static int start(Context context, Surface surface) {
+        mContext=context.getApplicationContext();
+        videoRunnable=new EncoderVideoRunnable(null,surface);
+        new Thread(videoRunnable).start();
         //username = user.getUsername();
         //password = user.getPassword();
         //AVAPIsClient.uid =user.getUID();
         System.out.println("开始连接...");
-        String username=OsdSharePreference.getInstance(context.getApplicationContext()).getString("username",defaultUsername);
-        String password=OsdSharePreference.getInstance(context.getApplicationContext()).getString("password",defaultPassword);
-        String uid=OsdSharePreference.getInstance(context.getApplicationContext()).getString("uid",defaultUid);
+        String username=OsdSharePreference.getInstance(mContext.getApplicationContext()).getString("username",defaultUsername);
+        String password=OsdSharePreference.getInstance(mContext.getApplicationContext()).getString("password",defaultPassword);
+        String uid=OsdSharePreference.getInstance(mContext.getApplicationContext()).getString("uid",defaultUid);
 
         Log.i("连接信息","用户名："+username+"密码："+password+"uid:"+uid);
         // 初始化IOTC(物联网)端，需在调用任何IOTC相关函数前调用次函数,此函数利用ip连接主机
@@ -336,7 +343,7 @@ public class AVAPIsClient {
     }
 
     public static class VideoThread implements Runnable {
-        static final int VIDEO_BUF_SIZE = 200000;
+        static final int VIDEO_BUF_SIZE = 100000;
         static final int FRAME_INFO_SIZE = 16;
 
         private int avIndex;
@@ -355,13 +362,13 @@ public class AVAPIsClient {
             Log.i("Decode","VideoThread启动，获取视频流");
             AVAPIs av = new AVAPIs();
             byte[] frameInfo = new byte[FRAME_INFO_SIZE];
-            byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
             int[] outBufSize = new int[1];
             int[] outFrameSize = new int[1];
             int[] outFrmInfoBufSize = new int [1];
             SaveFrames saveFrames = new SaveFrames();
             while (true) {
                 int[] frameNumber = new int[1];
+                byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
                 int ret = av.avRecvFrameData2(avIndex, videoBuffer,
                         VIDEO_BUF_SIZE, outBufSize, outFrameSize,
                         frameInfo, FRAME_INFO_SIZE,
@@ -405,7 +412,10 @@ public class AVAPIsClient {
                 Log.i("Decode","Video实际长度"+outFrameSize[0]);
                 // Now the data is ready in videoBuffer[0 ... ret - 1]
                 // Do something here
-                sendFrame(new BufferInfo(outFrameSize[0], videoBuffer));
+                //sendFrame(new BufferInfo(outFrameSize[0], videoBuffer));
+                if(videoRunnable != null){
+                    videoRunnable.addData(videoBuffer);
+                }
                 //---------------------------------------------------------------------
                 /*if (startReceive) {
                     saveFrames.saveFrames(videoBuffer, frameInfo, ret);

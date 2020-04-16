@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.VideoInfo;
 import com.camera.model.api.AVAPIsClient;
+import com.decode.EncoderVideoRunnable;
 import com.decode.MediaCodecDecoder;
 import com.decode.VideoDecoder;
 import com.decode.tools.AvcUtils;
@@ -968,7 +969,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         } catch (Exception e) {
             e.printStackTrace();
         }*/
-        decoder=new VideoDecoder(new Surface(surface));
+
         //mSurface = new Surface(surface);
        /* // 配置解码器
         Log.i("TextureView",mediaCodecDecoder==null?"空":"不为空");
@@ -976,8 +977,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         System.out.println("配置解码器");
         // 启动解码器
         mediaCodecDecoder.start();*/
-        decoder.start(MainActivity.this);
-        Log.i("Decode","decoder.start()");
+AVAPIsClient.start(MainActivity.this.getApplicationContext(),new Surface(surface));
+       //new Thread(new EncoderVideoRunnable(null,new Surface(surface))).start();
+       /*
+        decoder=new VideoDecoder(new Surface(surface));
+        decoder.start(getApplicationContext());
+        Log.i("Decode","decoder.start()");*/
     }
 
     @Override
@@ -1181,7 +1186,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    AVAPIsClient.start(MainActivity.this);
+                    //AVAPIsClient.start(MainActivity.this);
                 }
             },2000);
 

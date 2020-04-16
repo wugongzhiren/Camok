@@ -46,10 +46,10 @@ public class VideoDecoder {
     //private Server mServer;
     //private AVAPIsClient client;
     private Worker mWorker;
-    private MediaCodec decoder;
+    private static MediaCodec decoder;
     volatile boolean isRunning;
     private MediaFormat format;
-    public MediaMuxer mediaMuxer = null;
+    public static MediaMuxer mediaMuxer = null;
     public static boolean isNeedRecord=false;
 
     public VideoDecoder(Surface surface) {
@@ -71,9 +71,9 @@ public class VideoDecoder {
             return;
         }
     }
-    private MediaCodec.BufferInfo videoTrackInfo = new MediaCodec.BufferInfo();
+    private static MediaCodec.BufferInfo videoTrackInfo = new MediaCodec.BufferInfo();
     int frameRate;
-    int videoTrackIndex;
+    static int videoTrackIndex;
     String path;
     public boolean startRecord(){
         Log.i("Muxer", "开始录制准备");
@@ -141,7 +141,7 @@ public class VideoDecoder {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    AVAPIsClient.start(context);
+                   // AVAPIsClient.start(context);
                 }
             }).start();
         }
@@ -176,7 +176,6 @@ public class VideoDecoder {
     }
 
     public void start(Context context) {
-
         Log.d(TAG, "decoder线程启动");
         if (!config(context)) {
             Log.d(TAG, "视频解码器初始化失败");
@@ -185,14 +184,14 @@ public class VideoDecoder {
         Log.i(TAG, "解码开始isRunning：" +isRunning );
         if (mWorker == null) {
             mWorker = new Worker();
-            mWorker.setRunning(true);
+           // mWorker.setRunning(true);
             mWorker.start();
         }
     }
 
     public void stop() {
         if (mWorker != null) {
-            mWorker.setRunning(false);
+           // mWorker.setRunning(false);
             mWorker = null;
         }
         //AVAPIsClient.close();
@@ -206,15 +205,15 @@ public class VideoDecoder {
 
     }
 
-    private class Worker extends Thread {
-        MediaCodec.BufferInfo mBufferInfo= new MediaCodec.BufferInfo();;
-        public void setRunning(boolean running) {
+    private static class Worker extends Thread {
+        MediaCodec.BufferInfo mBufferInfo= new MediaCodec.BufferInfo();
+       /* public void setRunning(boolean running) {
             isRunning = running;
-        }
+        }*/
         @Override
         public void run() {
 
-            while (isRunning) {
+            while (true) {
                 try {
                     decode();
                 }catch (IllegalStateException e){
@@ -223,7 +222,7 @@ public class VideoDecoder {
                 }
 
             }
-            release();
+            //release();
 
         }
 
@@ -253,7 +252,7 @@ public class VideoDecoder {
                         Log.d("decode", "InputBuffer BUFFER_FLAG_END_OF_STREAM");
                         decoder.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                         //isEOS = true;
-                        isRunning = false;
+                        //isRunning = false;
                         //服务已经断开，释放服务端
                         //mServer.release();
                     } else {
