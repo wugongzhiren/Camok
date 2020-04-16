@@ -8,8 +8,11 @@ import android.util.Log;
 
 import com.camera.model.SaveFrames;
 import com.decode.tools.BufferInfo;
+import com.hankvision.ipcsdk.Dllipcsdk;
+import com.hankvision.ipcsdk.JOSDInfo;
 import com.tutk.IOTC.AVAPIs;
 import com.tutk.IOTC.IOTCAPIs;
+import com.zhuangliming.camok.OsdSharePreference;
 import com.zhuangliming.camok.model.MessageEvent;
 
 
@@ -18,13 +21,17 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 public class AVAPIsClient {
 
     private static int sid; // tutk_platform_free session ID
-    private static String uid="41R82E1J52USSEHZ111A"; // 摄像头的uid
-    private static String username = "admin";
-    private static String password = "123456";
+    static  String strIp = "192.168.1.18";
+    static String strUsername = "admin";
+    static String strPassword = "admin";
+    private static String defaultUid="41R82E1J52USSEHZ111A"; // 摄像头的uid
+    private static String defaultUsername = "admin";
+    private static String defaultPassword = "123456";
     private static int avIndex = -1; // avClientStart的返回值
     private static Thread audioThread;
     private static Thread videoThread;
@@ -51,12 +58,17 @@ public class AVAPIsClient {
     /**
      * 开始连接设备
      */
-    public static int start() {
+    public static int start(Context context) {
 
         //username = user.getUsername();
         //password = user.getPassword();
         //AVAPIsClient.uid =user.getUID();
         System.out.println("开始连接...");
+        String username=OsdSharePreference.getInstance(context.getApplicationContext()).getString("username",defaultUsername);
+        String password=OsdSharePreference.getInstance(context.getApplicationContext()).getString("password",defaultPassword);
+        String uid=OsdSharePreference.getInstance(context.getApplicationContext()).getString("uid",defaultUid);
+
+        Log.i("连接信息","用户名："+username+"密码："+password+"uid:"+uid);
         // 初始化IOTC(物联网)端，需在调用任何IOTC相关函数前调用次函数,此函数利用ip连接主机
         // 参数0代表随机选取UDP端口
         // 初始化成功返回常量 IOTC_ER_NoERROR
@@ -84,7 +96,8 @@ public class AVAPIsClient {
 
         int[] servType = new int[1];
         // 接收AV数据前应通过AV服务器的认证
-        avIndex = AVAPIs.avClientStart(sid, "admin", "123456", 20000, servType, 0);
+
+        avIndex = AVAPIs.avClientStart(sid, username, password, 20000, servType, 0);
         AVAPIsClient.avIndex = avIndex;
         if (avIndex < 0) {
             Log.i("Decode","连接失败");
@@ -95,17 +108,17 @@ public class AVAPIsClient {
             EventBus.getDefault().post(new MessageEvent(MessageEvent.CONNECT_SUCCESS,null));
         }
         if (startIpcamStream(avIndex)) {
-
+            //getOSD();
             System.out.println("startVideoThread");
             startVideoThread();
             videoThread.start();
             isStarted=true;
-          /*  try {
+            try {
                 videoThread.join();
             } catch (InterruptedException e) {
                 System.out.println(e.getMessage());
                 return -4;
-            }*/
+            }
         }
         return 0;
     }
@@ -142,6 +155,16 @@ public class AVAPIsClient {
         }
 
         return true;
+    }
+    public static void getOSD(){
+        JOSDInfo josdInfo = Dllipcsdk.IPCNET_GetOsdInfo(strIp, 80, avIndex, strUsername, strPassword);
+        Log.i("SetParam", "开始获取OSD"+josdInfo==null?"没获取到":"获取到了");
+        if (josdInfo != null) {
+            Log.i("SetParam", "josdInfo:  ----- " + josdInfo.TextOSDTitle);
+            //System.out.println("josdInfo:  ----- " + josdInfo.TextOSDTitle);
+
+            // Dllipcsdk.IPCNET_SetOsdInfo(strIp, nHttpPort, 0, josdInfo, strUsername, strPassword);
+        }
     }
     public static void startVideoThread() {
         if (startIpcamStream(avIndex)) {
@@ -397,24 +420,19 @@ public class AVAPIsClient {
     }
 
     public static BlockingDeque blockingDeque=new LinkedBlockingDeque();
-    public static BufferInfo readFrame(){
+    public static BufferInfo readFrame()  {
+        Log.i("Decode","buffer出队");
         try {
-            Log.i("Decode","buffer出队");
             return (BufferInfo) blockingDeque.take();
         } catch (InterruptedException e) {
             e.printStackTrace();
-            Log.i("Decode","buffer出队出错");
             return null;
         }
     }
 
     public static void sendFrame(BufferInfo bi){
-        try {
-            Log.i("Decode","buffer入队");
-            blockingDeque.put(bi);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Log.i("Decode","buffer入队");
+        blockingDeque.offer(bi);
     }
 
 

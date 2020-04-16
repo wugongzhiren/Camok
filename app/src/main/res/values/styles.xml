@@ -1,11 +1,28 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="@android:style/Theme.NoTitleBar.Fullscreen">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:popupMenuStyle">@style/popmenuStyle</item>
+        <item name="android:textAppearanceSmallPopupMenu">@style/popmeuText</item>
+        <item name="android:textAppearanceLargePopupMenu">@style/popmeuText</item>
     </style>
-
+    <!--popMenu的Style-->
+    <style name="popmenuStyle" parent="@android:style/Widget.PopupMenu">
+        <!--<item name="android:popupBackground">#fff</item>-->
+    </style>
+    <!--popmenu的字体颜色-->
+    <style name="popmeuText">
+        <!--<item name="android:textColor">@color/white</item>-->
+        <item name="android:textSize">16sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <!--popMenu分割线的颜色-->
+<!--    <style name="popmenuDivier">
+        <item name="android:divider">@color/blueSky</item>
+        <item name="android:dividerHeight">2sp</item>
+    </style>-->
 </resources>

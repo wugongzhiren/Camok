@@ -1,5 +1,6 @@
 package com.decode;
 
+import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -11,6 +12,7 @@ import android.view.Surface;
 import com.camera.model.api.AVAPIsClient;
 import com.decode.tools.AvcUtils;
 import com.decode.tools.BufferInfo;
+import com.jiangdg.natives.YuvUtils;
 import com.zhuangliming.camok.model.MessageEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -132,12 +134,17 @@ public class VideoDecoder {
      *
      * @return
      */
-    public boolean config() {
+    public boolean config(Context context) {
+
         Log.i(TAG,"config");
         if(!AVAPIsClient.isStarted){
-            AVAPIsClient.start();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    AVAPIsClient.start(context);
+                }
+            }).start();
         }
-
         //mBufferInfo = new MediaCodec.BufferInfo();
         //首先读取编码的视频的长度和宽度
         int[] width = new int[1];
@@ -168,9 +175,10 @@ public class VideoDecoder {
         return true;
     }
 
-    public void start() {
+    public void start(Context context) {
+
         Log.d(TAG, "decoder线程启动");
-        if (!config()) {
+        if (!config(context)) {
             Log.d(TAG, "视频解码器初始化失败");
             isRunning = false;
         }
@@ -187,7 +195,7 @@ public class VideoDecoder {
             mWorker.setRunning(false);
             mWorker = null;
         }
-        AVAPIsClient.close();
+        //AVAPIsClient.close();
         decoder.flush();
         decoder.stop();
         decoder.release();
@@ -221,8 +229,10 @@ public class VideoDecoder {
 
         private void decode() {
             boolean isEOS = false;
-            while(!isEOS) {
+            BufferInfo bufferInfo;
+            while(true) {
                 //判断是否是流的结尾
+                bufferInfo = AVAPIsClient.readFrame();
                 int inIndex = decoder.dequeueInputBuffer(-1);
                 Log.i("decode", "解码开始：" + inIndex);
                 if (inIndex >= 0) {
@@ -230,7 +240,6 @@ public class VideoDecoder {
                      * 测试
                      */
 //                    byte[] frame=mServer.readFrame();
-                    BufferInfo bufferInfo = AVAPIsClient.readFrame();
                     //获取数据流
                     //Frame frame = mServer.readFrameWidthCache();
                     Log.i("decode", "解码开始bufferInfo大小：" + bufferInfo.len);
@@ -249,15 +258,15 @@ public class VideoDecoder {
                         //mServer.release();
                     } else {
                         //录制
-                        if(isNeedRecord){
-                            Log.i("Muxer","录制");
+                        if (isNeedRecord) {
+                            Log.i("Muxer", "录制");
                             ByteBuffer byteBuffer = ByteBuffer.wrap(bufferInfo.buffer, 0, bufferInfo.len);
-                            videoTrackInfo.presentationTimeUs = System.nanoTime()/1000;
+                            videoTrackInfo.presentationTimeUs = System.nanoTime() / 1000;
                             videoTrackInfo.offset = 0;
                             videoTrackInfo.size = bufferInfo.len;
                             videoTrackInfo.flags = MediaCodec.BUFFER_FLAG_KEY_FRAME;
                             if (bufferInfo.isIframe) {
-                                Log.i("Muxer","关键帧");
+                                Log.i("Muxer", "关键帧");
                                 videoTrackInfo.flags = MediaCodec.BUFFER_FLAG_KEY_FRAME;
 //                    System.out.println("I " + videoTrackInfo.size);
                             } else {
@@ -267,24 +276,27 @@ public class VideoDecoder {
                             mediaMuxer.writeSampleData(videoTrackIndex, byteBuffer, videoTrackInfo);
                         }
                         Log.d("decode", "填入数据");
+                        //加水印
+                        // 叠加时间水印
+                        //YuvUtils.addYuvOsd(bufferInfo.buffer, 300, 150,true, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), 200, 200);
                         buffer.put(bufferInfo.buffer, 0, bufferInfo.len);
                         buffer.clear();
-                        buffer.limit(bufferInfo.len);
+                        //buffer.limit(bufferInfo.len);
                         decoder.queueInputBuffer(inIndex, 0, bufferInfo.len, System.nanoTime() / 1000, 0);
                     }
-                } else {
-                    isEOS = true;
-                }
 
-                int outIndex = decoder.dequeueOutputBuffer(mBufferInfo, 0);
-                Log.d("decode", "video decoding .....outIndex："+outIndex);
-                while (outIndex >= 0) {
-                    Log.d("decode", "解码");
-//                        ByteBuffer buffer = decoder.getOutputBuffer(outIndex);
-                    decoder.releaseOutputBuffer(outIndex, true);
-                    outIndex = decoder.dequeueOutputBuffer(mBufferInfo, TIMEOUT_US);//再次获取数据，如果没有数据输出则outIndex=-1 循环结束
+
+                    int outIndex = decoder.dequeueOutputBuffer(mBufferInfo, 0);
+                    Log.d("decode", "video decoding .....outIndex：" + outIndex);
+                    while (outIndex >= 0) {
+                        Log.d("decode", "解码");
+                        ByteBuffer bufferss = decoder.getOutputBuffer(outIndex);
+                        decoder.releaseOutputBuffer(outIndex, true);
+                        outIndex = decoder.dequeueOutputBuffer(mBufferInfo, 0);//再次获取数据，如果没有数据输出则outIndex=-1 循环结束
+                    }
                 }
             }
+
 
         }
 

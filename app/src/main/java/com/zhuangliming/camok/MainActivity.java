@@ -17,11 +17,8 @@ import android.media.MediaFormat;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Gravity;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -32,11 +29,10 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 
 import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.VideoInfo;
@@ -50,15 +46,13 @@ import com.hankvision.ipcsdk.JMultipleOsdInfo;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
 import com.zhuangliming.FFmpegKit;
-import com.zhuangliming.camok.model.MediaItem;
 import com.zhuangliming.camok.model.MessageEvent;
 import com.zhuangliming.camok.video.FFmpegCommandCenter;
-import com.zhuangliming.camok.video.ProduceTextureView;
-import com.zhuangliming.camok.video.ThreadPoolUtils;
 import com.zhuangliming.camok.view.MediaPopView;
 import com.zhuangliming.camok.view.OsdPopView;
 import com.zhuangliming.camok.view.PreViewPhotoPopView;
 import com.zhuangliming.camok.view.PreViewVideoPopView;
+import com.zhuangliming.camok.view.UUIDPopView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -73,8 +67,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.OnClickListener,TextureView.SurfaceTextureListener {
     static {
@@ -119,41 +111,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     private Button buttonConnect;
     private ImageView imageViewLed2;
     private ImageView imageViewOSD;
-    /*public  Handler handler=new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if(msg.arg1==1){
-                //显示图片
-                displayPhotoPop(((MediaItem)msg.obj).url);
-            }else if(msg.arg1==2){
-                //预览视频
-                //displayVideoPop(((MediaItem)msg.obj).url);
-                Intent intent=new Intent(MainActivity.this,PLVideoViewActivity.class);
-                intent.putExtra("videoPath",((MediaItem)msg.obj).url);
-                startActivity(intent);
-            }else if(msg.arg1==3){
-                //表示连接成功
-                isConnected=true;
-                showOSD();
-                camConnect = 1;
-                leftTool.setVisibility(View.VISIBLE);
-                rightTool.setVisibility(View.VISIBLE);
-                buttonConnect.setText("已连接");
-                buttonConnect.setBackgroundColor(0xff00ff00);
-            }else if(msg.arg1==4){
-                //录制完成
-                if(OsdSharePreference.getInstance(MainActivity.this).getInt("osd",0)==1){
-                    //显示字幕，水印处理
-                    //addOsdInfoToVideo((String) msg.obj);
-                }
-            }
-            else {
-                setOsdInfo();
-                osdParent.setVisibility(View.VISIBLE);
-            }
-        }
-    };*/
     private ImageView imageViewSettings;
     private ImageButton recordBt;
     private ImageView editOsdImg;
@@ -174,38 +131,41 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     private TextView checkInfoTx;
     private TextView checkCompanyTx;
     private LinearLayout recordInfo;
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
-        MenuInflater menuInflater = new MenuInflater(this);
-        menuInflater.inflate(R.menu.menu, menu);
-    }
+    private void showPopupMenu(View view) {
+        // View当前PopupMenu显示的相对View的位置
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        // menu布局
+        popupMenu.getMenuInflater().inflate(R.menu.menu, popupMenu.getMenu());
+        // menu的item点击事件
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if(item.getItemId()==R.id.settings){
+                    displayUIDPop();
+                }
+                if(item.getItemId()==R.id.regard){
+                    System.exit(0);
+                }
+                return false;
+            }
+        });
+        // PopupMenu关闭事件
+        popupMenu.setOnDismissListener(new PopupMenu.OnDismissListener() {
+            @Override
+            public void onDismiss(PopupMenu menu) {
 
-    @Override
-    public boolean onContextItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.settings:
-                noUseToast();
-                //Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                //startActivityForResult(intent,0x100);
+                //Toast.makeText(getApplicationContext(), "关闭PopupMenu", Toast.LENGTH_SHORT).show();
+            }
+        });
 
-                break;
-            case R.id.regard:
-                //Intent intent1 = new Intent(MainActivity.this, Regard.class);
-                //startActivity(intent1);
-                System.exit(1);
-                noUseToast();
-                break;
-        }
-        return true;
+        popupMenu.show();
     }
 
     /**
      * Called when the activity is first created.
      */
     @Override
-
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -214,9 +174,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         initView();
         initEvent();
         showOSD();
-        //添加菜单
-        initVideoList();
-
         ButtonZoomTele.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -295,7 +252,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     private void initView() {
         imageViewSettings = (ImageView) findViewById(R.id.imageSettings);
-        registerForContextMenu(imageViewSettings);
+        //registerForContextMenu(imageViewSettings);
         buttonConnect = findViewById(R.id.button);
         imageViewLed2 = (ImageView) findViewById(R.id.buttonLED2);
         ButtonZoomTele = (ImageButton) findViewById(R.id.imageViewZOOM_TELE);
@@ -324,14 +281,14 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         *//*渲染方式，RENDERMODE_WHEN_DIRTY表示被动渲染，只有在调用requestRender或者onResume等方法时才会进行渲染。RENDERMODE_CONTINUOUSLY表示持续渲染*//*
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);*/
         //实例化解码器
-        mediaCodecDecoder = new MediaCodecDecoder();
+        //mediaCodecDecoder = new MediaCodecDecoder();
         // 初始化
-
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 Log.i("connectIPC","connectIPC auto");
-                StartRaw(buttonConnect);
+                //StartRaw(buttonConnect);
+
             }
         },2000);
         // 此线程从阻塞队列poll buffer信息并送入解码
@@ -358,7 +315,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 //打开媒体
                 displayMediaPop();
                 break;
-
+            case R.id.imageSettings:
+                showPopupMenu(v);
         }
     }
 
@@ -383,10 +341,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onClick(View v) {
 
                 if(decoder.isNeedRecord){
+                    recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang));
                     Toast.makeText(MainActivity.this,"结束录制",Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.GONE);
                     decoder.stopRecord();
                 }else{
+                    recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang_2));
                     Toast.makeText(MainActivity.this,"开始录制",Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.VISIBLE);
                     decoder.startRecord();
@@ -399,6 +359,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         imageViewOSD.setOnClickListener(this);
         columImg.setOnClickListener(this);
         textureView.setSurfaceTextureListener(this);
+        imageViewSettings.setOnClickListener(this);
     }
 
     public void showOSD(){
@@ -556,11 +517,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         } else {
             return TRY_AGAIN_LATER;
         }
-        configure(surface);
+        //弃用
+       /* configure(surface);
         Log.d("set", "config");
 
-        start();
-        Log.d("set", "start()");
+        //start();
+        Log.d("set", "start()");*/
 
         return 0;
     }
@@ -693,31 +655,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         checkCompanyTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkcompany"));
     }
 
-    private void noUseToast() {
-        Toast.makeText(MainActivity.this, "暂无功能", Toast.LENGTH_SHORT).show();
-    }
-
-    /**
-     * 初始化保存的视频列表
-     */
-    private void initVideoList() {
-        //videoInfoArrayList.clear();
-        //File file = new File(Environment.getDataDirectory().getPath()+ "/ACAM_VIDEOS");
-        //if (!file.exists()) {
-        //file.mkdirs();
-        //System.out.println("file.mkdirs");
-        //}
-        //String[] fileNames = file.list();
-        //File[] filePaths = file.listFiles();
-        //for (int i = 0; i < fileNames.length; i++) {
-        //VideoInfo videoInfo = new VideoInfo();
-        //videoInfo.setVideoName(fileNames[i]);
-        //videoInfo.setVideoPath(filePaths[i]);
-        //videoInfoArrayList.add(videoInfo);
-        //}
-//        System.out.println("videoInfoArrayList.size(): " + videoInfoArrayList.size());
-    }
-
     /*
      * 以下代码演示取视频流
      * StartRaw开启视频、StopRaw关闭视频、RawData回调
@@ -762,8 +699,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         }*/
         ioCtrl.initTCP();
         if (oldCam == 0) {
-            getUserInfo();
-            saveUserInfo();
+            //getUserInfo();
+            //saveUserInfo();
 /*
             bq = new LinkedBlockingDeque<>();// videobuffer信息存储到这里 解码器从此阻塞队列poll video的信息
             (new Thread() {
@@ -1039,7 +976,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         System.out.println("配置解码器");
         // 启动解码器
         mediaCodecDecoder.start();*/
-        decoder.start();
+        decoder.start(MainActivity.this);
         Log.i("Decode","decoder.start()");
     }
 
@@ -1162,12 +1099,36 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             }
         });
     }
+
+    /**
+     * 打开UID设置
+     */
+    public void displayUIDPop(){
+
+        UUIDPopView myPopupWindow = new UUIDPopView(this);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        lightOff();
+
+        /**
+         * 消失时屏幕变亮
+         */
+        myPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+
+                layoutParams.alpha=1.0f;
+
+                getWindow().setAttributes(layoutParams);
+            }
+        });
+    }
+
     /**
      * 显示时屏幕变暗
      */
     private void lightOff() {
 
-        Toast.makeText(this,"变暗",Toast.LENGTH_SHORT).show();
         WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
         layoutParams.alpha=0.3f;
@@ -1211,6 +1172,19 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         }else if(messageEvent.getMessage()==MessageEvent.SHOW_OSD){
             setOsdInfo();
             osdParent.setVisibility(View.VISIBLE);
+        }else if(messageEvent.getMessage()==MessageEvent.DEVICE_CHANGE){
+            //设备切换
+            if(decoder.isNeedRecord){
+                decoder.stopRecord();
+            }
+            AVAPIsClient.close();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    AVAPIsClient.start(MainActivity.this);
+                }
+            },2000);
+
         }
         else {
             return;

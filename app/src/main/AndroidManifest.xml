@@ -25,7 +25,7 @@
         <activity
             android:name="com.zhuangliming.camok.MainActivity"
             android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
+            android:theme="@style/AppTheme"></activity>
         <activity
             android:name="com.zhuangliming.camok.SplashActivity"
             android:screenOrientation="landscape"

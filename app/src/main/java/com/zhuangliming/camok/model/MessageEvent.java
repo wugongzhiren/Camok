@@ -9,6 +9,7 @@ public class MessageEvent {
     public static final int CONNECT_SUCCESS=3;
     public static final int RECORD_COMPLETE=4;
     public static final int SHOW_OSD=5;
+    public static final int DEVICE_CHANGE=6;
     private int message;
     private Object obj;
     public MessageEvent(int message,Object o) {
