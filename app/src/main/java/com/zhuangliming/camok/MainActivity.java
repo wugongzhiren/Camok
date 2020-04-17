@@ -965,25 +965,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.i("Decode","onSurfaceTextureAvailable");
-       /* try {
-            mediaCodecDecoder.init();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
-        //mSurface = new Surface(surface);
-       /* // 配置解码器
-        Log.i("TextureView",mediaCodecDecoder==null?"空":"不为空");
-        mediaCodecDecoder.configure(mSurface);
-        System.out.println("配置解码器");
-        // 启动解码器
-        mediaCodecDecoder.start();*/
         AVAPIsClient.start(MainActivity.this.getApplicationContext(),new Surface(surface));
-       //new Thread(new EncoderVideoRunnable(null,new Surface(surface))).start();
-       /*
-        decoder=new VideoDecoder(new Surface(surface));
-        decoder.start(getApplicationContext());
-        Log.i("Decode","decoder.start()");*/
     }
 
     @Override
@@ -1016,9 +998,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
        // t1.interrupt();
 
     }
-
     public void displayDialog(){
-
         OsdPopView myPopupWindow = new OsdPopView(this);
         myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
         lightOff();
@@ -1046,7 +1026,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         MediaPopView myPopupWindow = new MediaPopView(this);
         myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
         lightOff();
-
         /**
          * 消失时屏幕变亮
          */
@@ -1155,7 +1134,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             displayPhotoPop((String) messageEvent.getObj());
         }else if(messageEvent.getMessage()==MessageEvent.PREVIEW_VIDEO){
             //预览视频
-            decoder.stop();
+            AVAPIsClient.stopDecode();
+            AVAPIsClient.close();
             //displayVideoPop(((MediaItem)msg.obj).url);
             Intent intent=new Intent(MainActivity.this,PLVideoViewActivity.class);
             intent.putExtra("videoPath",(String) messageEvent.getObj());

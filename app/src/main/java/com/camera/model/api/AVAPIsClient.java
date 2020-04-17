@@ -136,7 +136,7 @@ public class AVAPIsClient {
 
     public static void stopDecode(){
         //mMuxerUtils.stopMuxer();
-       // mMuxerUtils.stopDecode();
+       mMuxerUtils.exit();
     }
     // 用来判断是否和服务器建立了 IO 连接
     public static boolean startIpcamStream(int avIndex) {
@@ -364,10 +364,6 @@ public class AVAPIsClient {
 
         @Override
         public void run() {
-            if(Thread.interrupted()){
-                AVAPIsClient.isStarted=false;
-                return;
-            }
             System.out.printf("[%s] Start\n",
                     Thread.currentThread().getName());
             Log.i("Decode","VideoThread启动，获取视频流");
@@ -378,6 +374,9 @@ public class AVAPIsClient {
             int[] outFrmInfoBufSize = new int [1];
             SaveFrames saveFrames = new SaveFrames();
             while (true) {
+                if(mMuxerUtils.isExit){
+                    return;
+                }
                 int[] frameNumber = new int[1];
                 byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
                 int ret = av.avRecvFrameData2(avIndex, videoBuffer,

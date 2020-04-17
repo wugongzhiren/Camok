@@ -24,7 +24,7 @@ public class MediaMuxerUtils {
     private boolean isVideoAdded;
     public boolean isRecord = false;
     private boolean isMuxerStarted;
-    private boolean isExit = false;
+    public boolean isExit = false;
     private int videoTrack = -1;
 
     private Object lock = new Object();
@@ -42,9 +42,8 @@ public class MediaMuxerUtils {
     }
 
     public static MediaMuxerUtils getMuxerRunnableInstance(Surface surface) {
-        if (muxerUtils == null) {
-            muxerUtils = new MediaMuxerUtils(surface);
-        }
+        //if (muxerUtils == null) {
+        muxerUtils = new MediaMuxerUtils(surface);
         return muxerUtils;
     }
 
@@ -212,9 +211,12 @@ public class MediaMuxerUtils {
         mMuxerThread = null;
     }
 
-    private void exit() {
+    public void exit() {
         Log.d(TAG, "---停止混合器(录音、录像)线程---");
         // 清理视频录制线程资源
+        videoRunnable.exit();
+        this.mSurface.release();
+        this.mSurface=null;
         if (videoRunnable != null) {
             videoRunnable.exit();
         }

@@ -109,12 +109,12 @@ public class EncoderVideoRunnable implements Runnable {
         createfile();
     }
 
-    private void stopCodec() {
+    public void stopCodec() {
         if (mVideoEncodec != null) {
+            mVideoEncodec.flush();
             mVideoEncodec.stop();
             mVideoEncodec.release();
             mVideoEncodec = null;
-
             isEncoderStart = false;
             Log.d(TAG, "关闭视频编码器");
         }
