@@ -25,7 +25,6 @@
             android:layout_marginBottom="8dp"
             android:background="#CA1A0D"
             android:textColor="#FFFFFF"
-            android:onClick="StartRaw"
             android:text="未连接"
             android:textSize="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -277,8 +276,6 @@
                 android:background="@mipmap/record"/>
         </LinearLayout>
     </FrameLayout>
-
-
 
 
 

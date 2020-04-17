@@ -234,6 +234,32 @@ public class MediaMuxerUtils {
         }
     }
 
+    /**
+     * 切换设备时候除了surface不需要释放，其他都需要
+     */
+    public void releaseDecodec(){
+        videoRunnable.stopCodec();
+        stop();
+    }
+    /**
+     * 断网时停止线程
+     */
+    public void stop(){
+        Log.d(TAG, "---停止混合器(录音、录像)线程---");
+        // 清理视频录制线程资源
+        videoRunnable.exit();
+        if (videoRunnable != null) {
+            videoRunnable.exit();
+        }
+        if (mVideoThread != null) {
+            mVideoThread.stop();
+            mVideoThread = null;
+        }
+        isExit = true;
+        synchronized (lock) {
+            lock.notify();
+        }
+    }
     public boolean isMuxerStarted() {
         return isMuxerStarted;
     }

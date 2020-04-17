@@ -997,7 +997,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         EventBus.getDefault().unregister(this);
         //mediaCodecDecoder.release();
        // t1.interrupt();
-
+        AVAPIsClient.stopDecode();
+        AVAPIsClient.close();
     }
     public void displayDialog(){
         OsdPopView myPopupWindow = new OsdPopView(this);
@@ -1161,23 +1162,27 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             osdParent.setVisibility(View.VISIBLE);
         }else if(messageEvent.getMessage()==MessageEvent.DEVICE_CHANGE){
             //设备切换
-            if(decoder.isNeedRecord){
-                decoder.stopRecord();
+            if(AVAPIsClient.isRecording()){
+                Toast.makeText(MainActivity.this,"正在录制，请先停止后再切换设备",Toast.LENGTH_SHORT).show();
+                return;
             }
+            //AVAPIsClient.stopDecode();
             AVAPIsClient.close();
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    //AVAPIsClient.start(MainActivity.this);
-                }
-            },2000);
+            AVAPIsClient.releaseDecodec();
+
+            buttonConnect.setText("正在切换设备");
+            AVAPIsClient.start(getApplicationContext(),surface);
+
         }else if(messageEvent.getMessage()==MessageEvent.NET_CONNECT){
+            buttonConnect.setText("正在连接");
             Toast.makeText(MainActivity.this,"网络已连接",Toast.LENGTH_SHORT).show();
             AVAPIsClient.start(getApplicationContext(),surface);
         }
         else if(messageEvent.getMessage()==MessageEvent.NET_LOSS){
+            buttonConnect.setText("网络断开");
+            buttonConnect.setBackgroundColor(getResources().getColor(R.color.red));
             Toast.makeText(MainActivity.this,"网络断开",Toast.LENGTH_SHORT).show();
-            //AVAPIsClient.stopDecode();
+            //AVAPIsClient.stopDecodeThread();
             AVAPIsClient.close();
         }
         else {

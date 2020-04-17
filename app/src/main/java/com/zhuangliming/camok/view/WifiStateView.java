@@ -72,10 +72,11 @@ public class WifiStateView  extends AppCompatImageView {
                     break;
 
                 case LEVEL_NONE:
-                    view.setImageResource(R.drawable.wifi5);
+                    view.setImageResource(R.drawable.wifi1);
                     break;
 
                 default:
+                    view.setImageResource(R.drawable.wifi5);
                     break;
             }
         }
@@ -99,10 +100,15 @@ public class WifiStateView  extends AppCompatImageView {
 
             }else if(action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
                 Log.i(TAG, "onReceive 处理"+action);
-                NetworkInfo netInfo =  mCM.getActiveNetworkInfo();
                 //当前网络无连接，当前网络不是wifi连接,当前网络是wifi但是没有连接，wifi图标都显示无连接
-                 if(netInfo != null && netInfo.getType() == ConnectivityManager.TYPE_WIFI && !netInfo.isConnected()){
+                if(isNetworkConnected(context)){
+                    Log.i(TAG,"网络连接");
+                    EventBus.getDefault().post(new MessageEvent(MessageEvent.NET_CONNECT,null));
+                }else {
+                    Log.i(TAG,"无网络连接");
                     mWifiHandler.sendEmptyMessage(LEVEL_NONE);
+                    EventBus.getDefault().post(new MessageEvent(MessageEvent.NET_LOSS,null));
+
                 }
 
             }else if(action.equals(WifiManager.RSSI_CHANGED_ACTION)){
@@ -115,19 +121,8 @@ public class WifiStateView  extends AppCompatImageView {
                 WifiInfo info = mWifiManager.getConnectionInfo();
                 //计算wifi的信号等级
                 int level = WifiManager.calculateSignalLevel(info.getRssi(), LEVEL_DGREE);
-                Log.i(TAG,"wifi rssi "+info.getRssi());
+                Log.i(TAG,"wifi level "+level);
                 mWifiHandler.sendEmptyMessage(level);
-            }else if(action.equals("android.net.conn.CONNECTIVITY_CHANGE")){
-                Log.i(TAG,"网络连接CONNECTIVITY_CHANGE");
-                //当前网络无连接，当前网络不是wifi连接,当前网络是wifi但是没有连接，wifi图标都显示无连接
-                if(isNetworkConnected(context)){
-                    Log.i(TAG,"网络连接");
-                    EventBus.getDefault().post(new MessageEvent(MessageEvent.NET_CONNECT,null));
-                }else {
-                    Log.i(TAG,"无网络连接");
-                    EventBus.getDefault().post(new MessageEvent(MessageEvent.NET_LOSS,null));
-
-                }
             }
         }
     };

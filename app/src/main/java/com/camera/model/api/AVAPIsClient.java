@@ -2,8 +2,6 @@ package com.camera.model.api;
 
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.Surface;
 
@@ -24,10 +22,8 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
 public class AVAPIsClient {
-
     private static int sid; // tutk_platform_free session ID
     static  String strIp = "192.168.1.18";
     static String strUsername = "admin";
@@ -137,6 +133,14 @@ public class AVAPIsClient {
     public static void stopDecode(){
         //mMuxerUtils.stopMuxer();
        mMuxerUtils.exit();
+    }
+    public static void releaseDecodec(){
+        //mMuxerUtils.stopMuxer();
+        mMuxerUtils.releaseDecodec();
+    }
+
+    public static boolean isRecording(){
+        return mMuxerUtils.isMuxerStarted();
     }
     // 用来判断是否和服务器建立了 IO 连接
     public static boolean startIpcamStream(int avIndex) {
