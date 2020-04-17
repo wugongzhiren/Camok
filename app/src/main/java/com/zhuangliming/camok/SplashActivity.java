@@ -2,8 +2,11 @@ package com.zhuangliming.camok;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,10 +29,23 @@ public class SplashActivity extends Activity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                //Toast.makeText(SplashActivity.this,"启动",Toast.LENGTH_SHORT).show();
-                Intent intent=new Intent(SplashActivity.this,MainActivity.class);
-                SplashActivity.this.startActivity(intent);
-                SplashActivity.this.finish();
+                //没有网络
+                if(!isNetworkConnected()){
+                    Toast.makeText(SplashActivity.this,"没有网络连接,即将退出！",Toast.LENGTH_SHORT).show();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            SplashActivity.this.finish();
+                        }
+                    },2000);
+
+                }else {
+                    //Toast.makeText(SplashActivity.this,"启动",Toast.LENGTH_SHORT).show();
+                    Intent intent=new Intent(SplashActivity.this,MainActivity.class);
+                    SplashActivity.this.startActivity(intent);
+                    SplashActivity.this.finish();
+                }
+
             }
         },3000);
     }
@@ -49,21 +65,26 @@ public class SplashActivity extends Activity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {//android 6.0以上
             Log.v(TAG,"测试手机版本为：android 6.0以上");
-
             int writePermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             if (writePermission != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-
             }else{
                 Log.v(TAG,"测试手机版本为：android 6.0以上--->已申请");
             }
         }else{//android 6.0以下
             Log.v(TAG,"测试手机版本为：android 6.0以下");
-
         }
-
     }
-
+    public boolean isNetworkConnected() {
+            ConnectivityManager mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+            if (mNetworkInfo != null) {
+                //这种方法也可以
+                return mNetworkInfo .getState()== NetworkInfo.State.CONNECTED;
+               // return mNetworkInfo.isAvailable();
+        }
+        return false;
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,  String[] permissions,  int[] grantResults) {
@@ -71,16 +92,12 @@ public class SplashActivity extends Activity {
         if (requestCode == 100) {
             if (permissions[0].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[0]
                     == PackageManager.PERMISSION_GRANTED) {//允许
-
                 Log.v(TAG,"测试手机版本为：android 6.0以上--->未申请--->申请读写权限--->成功！");
-
             } else {//拒绝
-
                 //Log.v(TAG,"测试手机版本为：android 6.0以上--->未申请--->申请读写权限--->失败！");
                 Toast.makeText(this, "请赋予读写权限，否则应用部分功能将无法使用！", Toast.LENGTH_LONG).show();
                 SplashActivity.this.finish();
             }
         }
     }
-
 }

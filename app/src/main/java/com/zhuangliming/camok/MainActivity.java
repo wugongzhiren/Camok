@@ -965,7 +965,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.i("Decode","onSurfaceTextureAvailable");
-        AVAPIsClient.start(MainActivity.this.getApplicationContext(),new Surface(surface));
+        this.surface=new Surface(surface);
+        AVAPIsClient.start(MainActivity.this.getApplicationContext(),this.surface);
     }
 
     @Override
@@ -1170,7 +1171,14 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                     //AVAPIsClient.start(MainActivity.this);
                 }
             },2000);
-
+        }else if(messageEvent.getMessage()==MessageEvent.NET_CONNECT){
+            Toast.makeText(MainActivity.this,"网络已连接",Toast.LENGTH_SHORT).show();
+            AVAPIsClient.start(getApplicationContext(),surface);
+        }
+        else if(messageEvent.getMessage()==MessageEvent.NET_LOSS){
+            Toast.makeText(MainActivity.this,"网络断开",Toast.LENGTH_SHORT).show();
+            //AVAPIsClient.stopDecode();
+            AVAPIsClient.close();
         }
         else {
             return;
