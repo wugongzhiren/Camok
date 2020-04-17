@@ -9,6 +9,7 @@ import android.view.Surface;
 
 import com.camera.model.SaveFrames;
 import com.decode.EncoderVideoRunnable;
+import com.decode.MediaMuxerUtils;
 import com.decode.tools.BufferInfo;
 import com.hankvision.ipcsdk.Dllipcsdk;
 import com.hankvision.ipcsdk.JOSDInfo;
@@ -61,12 +62,15 @@ public class AVAPIsClient {
      * 开始连接设备
      */
     private static Context mContext;
-
+    public static MediaMuxerUtils mMuxerUtils ;
     private static EncoderVideoRunnable videoRunnable;
     public static int start(Context context, Surface surface) {
         mContext=context.getApplicationContext();
-        videoRunnable=new EncoderVideoRunnable(null,surface);
-        new Thread(videoRunnable).start();
+        /*videoRunnable=new EncoderVideoRunnable(null,surface);
+        new Thread(videoRunnable).start();*/
+        mMuxerUtils =MediaMuxerUtils.getMuxerRunnableInstance(surface);
+        mMuxerUtils.startDecode();
+        //mMuxerUtils.startMuxerThread();
         //username = user.getUsername();
         //password = user.getPassword();
         //AVAPIsClient.uid =user.getUID();
@@ -120,16 +124,20 @@ public class AVAPIsClient {
             startVideoThread();
             videoThread.start();
             isStarted=true;
-            try {
+            /*try {
                 videoThread.join();
             } catch (InterruptedException e) {
                 System.out.println(e.getMessage());
                 return -4;
-            }
+            }*/
         }
         return 0;
     }
 
+    public static void stopDecode(){
+        //mMuxerUtils.stopMuxer();
+       // mMuxerUtils.stopDecode();
+    }
     // 用来判断是否和服务器建立了 IO 连接
     public static boolean startIpcamStream(int avIndex) {
         AVAPIs av = new AVAPIs();
@@ -180,6 +188,9 @@ public class AVAPIsClient {
             //videoThread.start();
         }
     }
+
+
+
 
     public static void controlVideoThread() {
         videoThread.interrupt();
@@ -343,7 +354,7 @@ public class AVAPIsClient {
     }
 
     public static class VideoThread implements Runnable {
-        static final int VIDEO_BUF_SIZE = 100000;
+        static final int VIDEO_BUF_SIZE = 200000;
         static final int FRAME_INFO_SIZE = 16;
 
         private int avIndex;
@@ -413,9 +424,10 @@ public class AVAPIsClient {
                 // Now the data is ready in videoBuffer[0 ... ret - 1]
                 // Do something here
                 //sendFrame(new BufferInfo(outFrameSize[0], videoBuffer));
-                if(videoRunnable != null){
+                /*if(videoRunnable != null){
                     videoRunnable.addData(videoBuffer);
-                }
+                }*/
+                mMuxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer));
                 //---------------------------------------------------------------------
                 /*if (startReceive) {
                     saveFrames.saveFrames(videoBuffer, frameInfo, ret);

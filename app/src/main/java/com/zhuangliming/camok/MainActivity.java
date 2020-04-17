@@ -341,17 +341,18 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             @Override
             public void onClick(View v) {
 
-                if(decoder.isNeedRecord){
+                if(AVAPIsClient.mMuxerUtils.isMuxerStarted()){
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang));
                     Toast.makeText(MainActivity.this,"结束录制",Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.GONE);
-                    decoder.stopRecord();
+                    //AVAPIsClient.mMuxerUtils.se()=false;
+                    AVAPIsClient.mMuxerUtils.stopMuxer();
                 }else{
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang_2));
                     Toast.makeText(MainActivity.this,"开始录制",Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.VISIBLE);
-                    decoder.startRecord();
-
+                    //AVAPIsClient.mMuxerUtils.isRecord=true;
+                    AVAPIsClient.mMuxerUtils.startMuxer();
                 }
 
             }
@@ -977,7 +978,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         System.out.println("配置解码器");
         // 启动解码器
         mediaCodecDecoder.start();*/
-AVAPIsClient.start(MainActivity.this.getApplicationContext(),new Surface(surface));
+        AVAPIsClient.start(MainActivity.this.getApplicationContext(),new Surface(surface));
        //new Thread(new EncoderVideoRunnable(null,new Surface(surface))).start();
        /*
         decoder=new VideoDecoder(new Surface(surface));

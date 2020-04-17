@@ -93,7 +93,7 @@ public class VideoDecoder {
             format.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
             format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
                     MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
-            format.setByteBuffer("csd-0", ByteBuffer.wrap(this.sps));
+            format.setByteBuffer("csd-0", ByteBuffer.wrap(this.cur_sps));
             format.setByteBuffer("csd-1", ByteBuffer.wrap(this.pps));
         }
         format.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
