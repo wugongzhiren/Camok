@@ -350,7 +350,11 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                     //检测存储空间
                     long size=getAvailableExternalMemorySize();
                     Log.i("存储检测",size+"");
-
+                    if(size<104857000){
+                        //小于100M
+                        Toast.makeText(MainActivity.this,"存储空间不足,请释放后再录制",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang_2));
                     Toast.makeText(MainActivity.this, "开始录制", Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.VISIBLE);

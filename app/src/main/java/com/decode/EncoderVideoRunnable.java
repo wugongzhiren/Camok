@@ -196,7 +196,7 @@ public class EncoderVideoRunnable implements Runnable {
         // YuvUtils.addYuvOsd(rawFrame, width[0], height[0], true,new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), 100, 100);
 
         //返回编码器的一个输入缓存区句柄，-1表示当前没有可用的输入缓存区
-        int inputBufferIndex = mVideoEncodec.dequeueInputBuffer(-1);
+        int inputBufferIndex = mVideoEncodec.dequeueInputBuffer(0);
         if (inputBufferIndex >= 0) {
             Log.i(TAG, "inputBufferIndex=" + inputBufferIndex);
             // 绑定一个被空的、可写的输入缓存区inputBuffer到客户端
@@ -244,8 +244,9 @@ public class EncoderVideoRunnable implements Runnable {
             }
             // 向输入缓存区写入有效原始数据，并提交到编码器中进行编码处理
             inputBuffer.clear();
+            inputBuffer.rewind();
             inputBuffer.put(rawFrame.buffer, 0, rawFrame.len);
-            mVideoEncodec.queueInputBuffer(inputBufferIndex, 0, rawFrame.len, System.nanoTime() / 1000, 0);
+            mVideoEncodec.queueInputBuffer(inputBufferIndex, 0, rawFrame.len, 0, 0);
         }
         // 返回一个输出缓存区句柄，当为-1时表示当前没有可用的输出缓存区
         // mBufferInfo参数包含被编码好的数据，timesOut参数为超时等待的时间

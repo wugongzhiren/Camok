@@ -359,7 +359,7 @@ public class AVAPIsClient {
     }
 
     public static class VideoThread implements Runnable {
-        static int VIDEO_BUF_SIZE = 200000;
+        static int VIDEO_BUF_SIZE = 100000;
         static final int FRAME_INFO_SIZE = 16;
 
         private int avIndex;
