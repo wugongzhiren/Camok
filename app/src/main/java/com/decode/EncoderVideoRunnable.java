@@ -27,7 +27,6 @@ import com.decode.tools.BufferInfo;
 
 /**
  * 对YUV视频流进行编码
- * Created by jiangdongguo on 2017/5/6.
  */
 
 public class EncoderVideoRunnable implements Runnable {
