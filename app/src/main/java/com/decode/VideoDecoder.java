@@ -12,7 +12,6 @@ import android.view.Surface;
 import com.camera.model.api.AVAPIsClient;
 import com.decode.tools.AvcUtils;
 import com.decode.tools.BufferInfo;
-import com.jiangdg.natives.YuvUtils;
 import com.zhuangliming.camok.model.MessageEvent;
 
 import org.greenrobot.eventbus.EventBus;

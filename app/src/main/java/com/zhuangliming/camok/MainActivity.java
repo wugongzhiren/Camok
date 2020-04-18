@@ -17,6 +17,7 @@ import android.media.MediaFormat;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.StatFs;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -37,7 +38,6 @@ import android.widget.Toast;
 import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.VideoInfo;
 import com.camera.model.api.AVAPIsClient;
-import com.decode.EncoderVideoRunnable;
 import com.decode.MediaCodecDecoder;
 import com.decode.VideoDecoder;
 import com.decode.tools.AvcUtils;
@@ -46,7 +46,6 @@ import com.hankvision.ipcsdk.Dllipcsdk;
 import com.hankvision.ipcsdk.JMultipleOsdInfo;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.hankvision.ipcsdk.JTimeOsdInfo;
-import com.zhuangliming.FFmpegKit;
 import com.zhuangliming.camok.model.MessageEvent;
 import com.zhuangliming.camok.video.FFmpegCommandCenter;
 import com.zhuangliming.camok.view.MediaPopView;
@@ -69,7 +68,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.BlockingDeque;
 
-public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.OnClickListener,TextureView.SurfaceTextureListener {
+public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.OnClickListener, TextureView.SurfaceTextureListener {
     static {
         System.loadLibrary("native-lib");
     }
@@ -104,7 +103,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     private byte[] pps = {0, 0, 0, 1, 104, -18, 60, -128/*,0,0,0,1,6,-27,1,91,-128*/};
 
     private Thread t1;
-    private boolean isConnected=false;
+    private boolean isConnected = false;
     MediaCodecDecoder mediaCodecDecoder; //解码器
     public static BlockingDeque<BufferInfo> bq;
     public BlockingDeque<BufferInfo> xbq;
@@ -142,10 +141,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                if(item.getItemId()==R.id.settings){
+                if (item.getItemId() == R.id.settings) {
                     displayUIDPop();
                 }
-                if(item.getItemId()==R.id.regard){
+                if (item.getItemId() == R.id.regard) {
                     System.exit(0);
                 }
                 return false;
@@ -259,23 +258,23 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         ButtonZoomTele = (ImageButton) findViewById(R.id.imageViewZOOM_TELE);
         ButtonZoomWide = (ImageButton) findViewById(R.id.imageViewZOOM_WIDE);
         ButtonMotorUp = (ImageButton) findViewById(R.id.imageViewMotorUp);
-        recordBt=findViewById(R.id.record);
-        editOsdImg=findViewById(R.id.editOsd);
+        recordBt = findViewById(R.id.record);
+        editOsdImg = findViewById(R.id.editOsd);
         ButtonMotorDown = (ImageButton) findViewById(R.id.imageViewMotorDown);
-       // radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
-        columImg=findViewById(R.id.imageView2);
+        // radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
+        columImg = findViewById(R.id.imageView2);
         screenCapBt = findViewById(R.id.imageView9);
-        osdParent=findViewById(R.id.textInfoParent);
-        parentView=findViewById(R.id.parent);
+        osdParent = findViewById(R.id.textInfoParent);
+        parentView = findViewById(R.id.parent);
         textureView = findViewById(R.id.frame);
-        taskNameTx=findViewById(R.id.taskNameTx);
-        wellNameTx=findViewById(R.id.wellNameTx);
-        checkInfoTx=findViewById(R.id.checkInfoTx);
-        checkCompanyTx=findViewById(R.id.checkCompanyTx);
-        imageViewOSD=findViewById(R.id.imageViewOSD);
-        leftTool=findViewById(R.id.leftTool);
-        rightTool=findViewById(R.id.rightTool);
-        recordInfo=findViewById(R.id.recordInfo);
+        taskNameTx = findViewById(R.id.taskNameTx);
+        wellNameTx = findViewById(R.id.wellNameTx);
+        checkInfoTx = findViewById(R.id.checkInfoTx);
+        checkCompanyTx = findViewById(R.id.checkCompanyTx);
+        imageViewOSD = findViewById(R.id.imageViewOSD);
+        leftTool = findViewById(R.id.leftTool);
+        rightTool = findViewById(R.id.rightTool);
+        recordInfo = findViewById(R.id.recordInfo);
         //textureView.setSurfaceTextureListener(this);
         /*glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setRenderer(new MyRender());
@@ -287,29 +286,29 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Log.i("connectIPC","connectIPC auto");
+                Log.i("connectIPC", "connectIPC auto");
                 //StartRaw(buttonConnect);
 
             }
-        },2000);
+        }, 2000);
         // 此线程从阻塞队列poll buffer信息并送入解码
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.editOsd:
                 displayDialog();
                 break;
             case R.id.imageViewOSD:
-                int osdShow=OsdSharePreference.getInstance(this).getInt("osd",0);
-                if(0==osdShow){
+                int osdShow = OsdSharePreference.getInstance(this).getInt("osd", 0);
+                if (0 == osdShow) {
                     setOsdInfo();
                     osdParent.setVisibility(View.VISIBLE);
-                    OsdSharePreference.getInstance(this).putInt("osd",1);
-                }else{
+                    OsdSharePreference.getInstance(this).putInt("osd", 1);
+                } else {
                     osdParent.setVisibility(View.GONE);
-                    OsdSharePreference.getInstance(this).putInt("osd",0);
+                    OsdSharePreference.getInstance(this).putInt("osd", 0);
                 }
                 break;
             case R.id.imageView2:
@@ -341,15 +340,19 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             @Override
             public void onClick(View v) {
 
-                if(AVAPIsClient.mMuxerUtils.isMuxerStarted()){
+                if (AVAPIsClient.mMuxerUtils.isMuxerStarted()) {
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang));
-                    Toast.makeText(MainActivity.this,"结束录制",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "结束录制", Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.GONE);
                     //AVAPIsClient.mMuxerUtils.se()=false;
                     AVAPIsClient.mMuxerUtils.stopMuxer();
-                }else{
+                } else {
+                    //检测存储空间
+                    long size=getAvailableExternalMemorySize();
+                    Log.i("存储检测",size+"");
+
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang_2));
-                    Toast.makeText(MainActivity.this,"开始录制",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "开始录制", Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.VISIBLE);
                     //AVAPIsClient.mMuxerUtils.isRecord=true;
                     AVAPIsClient.mMuxerUtils.startMuxer();
@@ -364,30 +367,31 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         imageViewSettings.setOnClickListener(this);
     }
 
-    public void showOSD(){
-        if(isConnected&&OsdSharePreference.getInstance(this).getInt("osd",0)==1){
+    public void showOSD() {
+        if (isConnected && OsdSharePreference.getInstance(this).getInt("osd", 0) == 1) {
             setOsdInfo();
             osdParent.setVisibility(View.VISIBLE);
         }
     }
 
-    private void addOsdInfoToVideo(String videoUrl){
+    private void addOsdInfoToVideo(String videoUrl) {
 
-        String textMark="测试文字";
-         final String dirpath =
+        String textMark = "测试文字";
+        final String dirpath =
                 Environment.getExternalStorageDirectory().getAbsolutePath() + "/TUTK_VIDEOS";
-        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.CHINA);
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.CHINA);
         final String path = dirpath + "/" + df.format(new Date()) + "111.mp4";
-        String[] commands= FFmpegCommandCenter.addTextMark(textMark,videoUrl,path);
-        final String[] _commands=commands;
-        FFmpegKit.execute(_commands);
+        String[] commands = FFmpegCommandCenter.addTextMark(textMark, videoUrl, path);
+        final String[] _commands = commands;
+
         /*Runnable compoundRun=new Runnable() {
             @Override
             public void run() {
 
         };*/
-       // ThreadPoolUtils.execute(compoundRun);
+        // ThreadPoolUtils.execute(compoundRun);
     }
+
     //辅助灯
     private boolean led2 = false;
 
@@ -650,7 +654,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         System.out.println(name);
     }
 
-    private void setOsdInfo(){
+    private void setOsdInfo() {
         taskNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("taskname"));
         wellNameTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("wellname"));
         checkInfoTx.setText(OsdSharePreference.getInstance(MainActivity.this).getString("checkinfo"));
@@ -692,7 +696,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     long lRawHandle = -1;
 
     public void StartRaw(View v) {
-        if(isConnected){
+        if (isConnected) {
             return;
         }
         buttonConnect.setText("正在连接");
@@ -749,7 +753,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     public void StartPlay(View v) {
 
         if (lPlay == -1) {
-          //SurfaceView surfaceView = findViewById(R.id.surfaceView);
+            //SurfaceView surfaceView = findViewById(R.id.surfaceView);
             /*if (mSurface != null) {
                 lPlay = Dllipcsdk.IPCNET_StartRawPlay(strIp, nVideoPort, 0, "admin", "admin", 1, mSurface);
             }*/
@@ -895,21 +899,22 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     /**
      * 截图
+     *
      * @return
      */
     public boolean takeScreenShot() {
-        String imagePath = Environment.getExternalStorageDirectory() + File.separator +"TUTK_PHOTO"+ File.separator +"screenshot_"+System.currentTimeMillis()+".png";
-        File file=new File(Environment.getExternalStorageDirectory() + File.separator +"TUTK_PHOTO");
-        if(!file.exists()){
+        String imagePath = Environment.getExternalStorageDirectory() + File.separator + "TUTK_PHOTO" + File.separator + "screenshot_" + System.currentTimeMillis() + ".png";
+        File file = new File(Environment.getExternalStorageDirectory() + File.separator + "TUTK_PHOTO");
+        if (!file.exists()) {
             file.mkdirs();
         }
-        Bitmap mScreenBitmap =drawText2Bitmap(textureView.getBitmap(),this);
+        Bitmap mScreenBitmap = drawText2Bitmap(textureView.getBitmap(), this);
         try {
             FileOutputStream out = new FileOutputStream(imagePath);
             mScreenBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
-            Toast.makeText(MainActivity.this,"截图成功",Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "截图成功", Toast.LENGTH_SHORT).show();
             return true;
         } catch (Exception e) {
             Log.i("screencap", "compress error");
@@ -919,6 +924,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     /**
      * 截图处理，因为textureview无法捕获本身之外的view信息
+     *
      * @param bitmap
      * @param mContext
      * @return
@@ -926,7 +932,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     public static Bitmap drawText2Bitmap(Bitmap bitmap, Context mContext) {
 
         //判断是否显示osd
-        if(OsdSharePreference.getInstance(mContext).getInt("osd",0)==0){
+        if (OsdSharePreference.getInstance(mContext).getInt("osd", 0) == 0) {
             return bitmap;
         }
         try {
@@ -942,7 +948,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             Canvas canvas = new Canvas(bitmap);
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG); // new antialised Paint
             paint.setColor(Color.rgb(255, 255, 255));       // text color - #3D3D3D
-            paint.setTextSize((int)(12 * scale));           // text size in pixels
+            paint.setTextSize((int) (12 * scale));           // text size in pixels
             paint.setShadowLayer(1f, 0f, 1f, Color.DKGRAY); // text shadow
 
             // draw text to the Canvas center
@@ -950,10 +956,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             //paint.getTextBounds(text, 0, text.length(), bounds);
             //int x = (bitmap.getWidth() - bounds.width()) / 6;
             //int y = (bitmap.getHeight() + bounds.height()) / 5;
-            canvas.drawText("检测任务："+OsdSharePreference.getInstance(mContext).getString("taskname"), 30, 60, paint);
-            canvas.drawText("井号信息："+OsdSharePreference.getInstance(mContext).getString("wellname"), 30, 110 , paint);
-            canvas.drawText("检测信息："+OsdSharePreference.getInstance(mContext).getString("checkinfo"), 30 , 160, paint);
-            canvas.drawText("检测单位："+OsdSharePreference.getInstance(mContext).getString("checkcompany"), 30 , 210 , paint);
+            canvas.drawText("检测任务：" + OsdSharePreference.getInstance(mContext).getString("taskname"), 30, 60, paint);
+            canvas.drawText("井号信息：" + OsdSharePreference.getInstance(mContext).getString("wellname"), 30, 110, paint);
+            canvas.drawText("检测信息：" + OsdSharePreference.getInstance(mContext).getString("checkinfo"), 30, 160, paint);
+            canvas.drawText("检测单位：" + OsdSharePreference.getInstance(mContext).getString("checkcompany"), 30, 210, paint);
             return bitmap;
         } catch (Exception e) {
             return null;
@@ -962,47 +968,47 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     //private Surface mSurface;
     public VideoDecoder decoder;
+
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        Log.i("Decode","onSurfaceTextureAvailable");
-        this.surface=new Surface(surface);
-        AVAPIsClient.start(MainActivity.this.getApplicationContext(),this.surface);
+        Log.i("Decode", "onSurfaceTextureAvailable");
+        this.surface = new Surface(surface);
+        AVAPIsClient.start(MainActivity.this.getApplicationContext(), this.surface);
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        Log.i("TextureView","onSurfaceTextureSizeChanged");
+        Log.i("TextureView", "onSurfaceTextureSizeChanged");
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        Log.i("TextureView","onSurfaceTextureDestroyed");
-       // decoder.stop();
+        Log.i("TextureView", "onSurfaceTextureDestroyed");
+        // decoder.stop();
         return false;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        Log.i("TextureView","onSurfaceTextureUpdated");
+        Log.i("TextureView", "onSurfaceTextureUpdated");
     }
-
-
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i("MainActivity","onDestroy");
+        Log.i("MainActivity", "onDestroy");
         //注销事件
         EventBus.getDefault().unregister(this);
         //mediaCodecDecoder.release();
-       // t1.interrupt();
+        // t1.interrupt();
         AVAPIsClient.stopDecode();
         AVAPIsClient.close();
     }
-    public void displayDialog(){
+
+    public void displayDialog() {
         OsdPopView myPopupWindow = new OsdPopView(this);
-        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER, 0, 0);
         lightOff();
 
         /**
@@ -1013,7 +1019,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onDismiss() {
                 WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
-                layoutParams.alpha=1.0f;
+                layoutParams.alpha = 1.0f;
 
                 getWindow().setAttributes(layoutParams);
             }
@@ -1023,10 +1029,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     /**
      * 打开媒体文件库
      */
-    public void displayMediaPop(){
+    public void displayMediaPop() {
 
         MediaPopView myPopupWindow = new MediaPopView(this);
-        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER, 0, 0);
         lightOff();
         /**
          * 消失时屏幕变亮
@@ -1036,7 +1042,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onDismiss() {
                 WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
-                layoutParams.alpha=1.0f;
+                layoutParams.alpha = 1.0f;
 
                 getWindow().setAttributes(layoutParams);
             }
@@ -1046,10 +1052,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     /**
      * 打开媒体文件库
      */
-    public void displayPhotoPop(String url){
+    public void displayPhotoPop(String url) {
 
-        PreViewPhotoPopView myPopupWindow = new PreViewPhotoPopView(this,url);
-        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        PreViewPhotoPopView myPopupWindow = new PreViewPhotoPopView(this, url);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER, 0, 0);
         /**
          * 消失时屏幕变亮
          */
@@ -1058,7 +1064,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onDismiss() {
                 WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
-                layoutParams.alpha=1.0f;
+                layoutParams.alpha = 1.0f;
 
                 getWindow().setAttributes(layoutParams);
             }
@@ -1068,10 +1074,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     /**
      * 打开媒体文件库
      */
-    public void displayVideoPop(String url){
+    public void displayVideoPop(String url) {
 
-        PreViewVideoPopView myPopupWindow = new PreViewVideoPopView(this,url);
-        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        PreViewVideoPopView myPopupWindow = new PreViewVideoPopView(this, url);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER, 0, 0);
         /**
          * 消失时屏幕变亮
          */
@@ -1080,7 +1086,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onDismiss() {
                 WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
-                layoutParams.alpha=1.0f;
+                layoutParams.alpha = 1.0f;
 
                 getWindow().setAttributes(layoutParams);
             }
@@ -1090,10 +1096,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     /**
      * 打开UID设置
      */
-    public void displayUIDPop(){
+    public void displayUIDPop() {
 
         UUIDPopView myPopupWindow = new UUIDPopView(this);
-        myPopupWindow.showAtLocation(parentView, Gravity.CENTER,0,0);
+        myPopupWindow.showAtLocation(parentView, Gravity.CENTER, 0, 0);
         lightOff();
 
         /**
@@ -1104,7 +1110,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onDismiss() {
                 WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
-                layoutParams.alpha=1.0f;
+                layoutParams.alpha = 1.0f;
 
                 getWindow().setAttributes(layoutParams);
             }
@@ -1118,7 +1124,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
         WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 
-        layoutParams.alpha=0.3f;
+        layoutParams.alpha = 0.3f;
 
         getWindow().setAttributes(layoutParams);
 
@@ -1126,67 +1132,100 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
 
     /**
      * 处理eventbus消息
+     *
      * @param messageEvent
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onHandleEventMessage(MessageEvent messageEvent){
-        if(messageEvent.getMessage()==MessageEvent.SHOW_PHOTO){
+    public void onHandleEventMessage(MessageEvent messageEvent) {
+        if (messageEvent.getMessage() == MessageEvent.SHOW_PHOTO) {
             //显示图片
-            Log.i("onHandleEventMessage","收到了显示图片");
+            Log.i("onHandleEventMessage", "收到了显示图片");
             displayPhotoPop((String) messageEvent.getObj());
-        }else if(messageEvent.getMessage()==MessageEvent.PREVIEW_VIDEO){
+        } else if (messageEvent.getMessage() == MessageEvent.PREVIEW_VIDEO) {
             //预览视频
             AVAPIsClient.stopDecode();
             AVAPIsClient.close();
             //displayVideoPop(((MediaItem)msg.obj).url);
-            Intent intent=new Intent(MainActivity.this,PLVideoViewActivity.class);
-            intent.putExtra("videoPath",(String) messageEvent.getObj());
+            Intent intent = new Intent(MainActivity.this, PLVideoViewActivity.class);
+            intent.putExtra("videoPath", (String) messageEvent.getObj());
             startActivity(intent);
-        }else if(messageEvent.getMessage()==MessageEvent.CONNECT_SUCCESS){
+        } else if (messageEvent.getMessage() == MessageEvent.CONNECT_SUCCESS) {
             //表示连接成功
-            isConnected=true;
+            isConnected = true;
             showOSD();
             camConnect = 1;
             leftTool.setVisibility(View.VISIBLE);
             rightTool.setVisibility(View.VISIBLE);
             buttonConnect.setText("已连接");
             buttonConnect.setBackgroundColor(0xff00ff00);
-        }else if(messageEvent.getMessage()==MessageEvent.RECORD_COMPLETE){
+        } else if (messageEvent.getMessage() == MessageEvent.CONNECT_FAIL) {
+            //表示连接成功
+            isConnected = false;
+            showOSD();
+            camConnect = 1;
+            leftTool.setVisibility(View.VISIBLE);
+            rightTool.setVisibility(View.VISIBLE);
+            buttonConnect.setText("连接失败");
+            buttonConnect.setBackgroundColor(getResources().getColor(R.color.red));
+        } else if (messageEvent.getMessage() == MessageEvent.RECORD_COMPLETE) {
             //录制完成
-            if(OsdSharePreference.getInstance(MainActivity.this).getInt("osd",0)==1){
+            if (OsdSharePreference.getInstance(MainActivity.this).getInt("osd", 0) == 1) {
                 //显示字幕，水印处理
                 addOsdInfoToVideo((String) messageEvent.getObj());
             }
-        }else if(messageEvent.getMessage()==MessageEvent.SHOW_OSD){
+        } else if (messageEvent.getMessage() == MessageEvent.SHOW_OSD) {
             setOsdInfo();
             osdParent.setVisibility(View.VISIBLE);
-        }else if(messageEvent.getMessage()==MessageEvent.DEVICE_CHANGE){
+        } else if (messageEvent.getMessage() == MessageEvent.DEVICE_CHANGE) {
             //设备切换
-            if(AVAPIsClient.isRecording()){
-                Toast.makeText(MainActivity.this,"正在录制，请先停止后再切换设备",Toast.LENGTH_SHORT).show();
+            if (AVAPIsClient.isRecording()) {
+                Toast.makeText(MainActivity.this, "正在录制，请先停止后再切换设备", Toast.LENGTH_SHORT).show();
                 return;
             }
-            //AVAPIsClient.stopDecode();
-            AVAPIsClient.close();
-            AVAPIsClient.releaseDecodec();
-
             buttonConnect.setText("正在切换设备");
-            AVAPIsClient.start(getApplicationContext(),surface);
+            buttonConnect.setBackgroundColor(getResources().getColor(R.color.red));
+            //AVAPIsClient.stopDecode();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    AVAPIsClient.close();
+                    AVAPIsClient.releaseDecodec();
+                    AVAPIsClient.start(getApplicationContext(), surface);
+                }
+            }, 500);
 
-        }else if(messageEvent.getMessage()==MessageEvent.NET_CONNECT){
+        } else if (messageEvent.getMessage() == MessageEvent.NET_CONNECT) {
             buttonConnect.setText("正在连接");
-            Toast.makeText(MainActivity.this,"网络已连接",Toast.LENGTH_SHORT).show();
-            AVAPIsClient.start(getApplicationContext(),surface);
-        }
-        else if(messageEvent.getMessage()==MessageEvent.NET_LOSS){
+            Toast.makeText(MainActivity.this, "网络已连接", Toast.LENGTH_SHORT).show();
+            AVAPIsClient.start(getApplicationContext(), surface);
+        } else if (messageEvent.getMessage() == MessageEvent.NET_LOSS) {
             buttonConnect.setText("网络断开");
             buttonConnect.setBackgroundColor(getResources().getColor(R.color.red));
-            Toast.makeText(MainActivity.this,"网络断开",Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "网络断开", Toast.LENGTH_SHORT).show();
             //AVAPIsClient.stopDecodeThread();
             AVAPIsClient.close();
-        }
-        else {
+        } else {
             return;
         }
     }
+
+    /**
+     * 检测本地存储空间
+     */
+    public long getAvailableExternalMemorySize() {
+        if (externalMemoryAvailable()) {
+            File path = Environment.getExternalStorageDirectory();
+            StatFs stat = new StatFs(path.getPath());
+            long blockSize = stat.getBlockSize();
+            long availableBlocks = stat.getAvailableBlocks();
+            return availableBlocks * blockSize;
+        } else {
+            return -1;
+        }
+    }
+
+    public boolean externalMemoryAvailable() {
+        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+    }
+
 }

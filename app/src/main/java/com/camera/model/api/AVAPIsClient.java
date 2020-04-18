@@ -320,6 +320,7 @@ public class AVAPIsClient {
      * 关闭连接
      */
     public static void close() {
+        Log.i("AVAPIsClient","关闭连接");
         AVAPIs.avClientStop(avIndex);
         System.out.println("avClientStop OK");
         IOTCAPIs.IOTC_Session_Close(sid);
@@ -358,7 +359,7 @@ public class AVAPIsClient {
     }
 
     public static class VideoThread implements Runnable {
-        static final int VIDEO_BUF_SIZE = 200000;
+        static int VIDEO_BUF_SIZE = 200000;
         static final int FRAME_INFO_SIZE = 16;
 
         private int avIndex;
@@ -376,20 +377,25 @@ public class AVAPIsClient {
             int[] outBufSize = new int[1];
             int[] outFrameSize = new int[1];
             int[] outFrmInfoBufSize = new int [1];
-            SaveFrames saveFrames = new SaveFrames();
+            //SaveFrames saveFrames = new SaveFrames();
+            byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
+            int[] frameNumber = new int[1];
+            int ret;
             while (true) {
                 if(mMuxerUtils.isExit){
                     return;
                 }
-                int[] frameNumber = new int[1];
-                byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
-                int ret = av.avRecvFrameData2(avIndex, videoBuffer,
+                ret = av.avRecvFrameData2(avIndex, videoBuffer,
                         VIDEO_BUF_SIZE, outBufSize, outFrameSize,
                         frameInfo, FRAME_INFO_SIZE,
                         outFrmInfoBufSize, frameNumber);
                 Log.i("视频流结果",ret+"");
-                if (ret == AVAPIs.AV_ER_DATA_NOREADY) {
+                if(ret == AVAPIs.AV_ER_BUFPARA_MAXSIZE_INSUFF){
+
+                } else if (ret == AVAPIs.AV_ER_DATA_NOREADY) {
                     try {
+                       // VIDEO_BUF_SIZE=VIDEO_BUF_SIZE-50000;
+                       // videoBuffer=new byte[VIDEO_BUF_SIZE];
                         Thread.sleep(30);
                         continue;
                     }

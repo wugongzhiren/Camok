@@ -120,21 +120,12 @@ public class UUIDPopView extends PopupWindow {
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //保存到本地
-                //Log.i("UUID",username.getText().toString()==null?"1":"0");
-                /*if(username.getText().toString().isEmpty()||password.getText().toString().isEmpty()||uuid.getText().toString().isEmpty()){
-                    Toast.makeText(mContext,"请输入有效信息",Toast.LENGTH_SHORT).show();
-                }else{*/
                     saveUserInfo();
-                    EventBus.getDefault().post(new MessageEvent(MessageEvent.DEVICE_CHANGE,null));
                     dismiss();
-                //}
-                //EventBus.getDefault().post(new MessageEvent(MessageEvent.SHOW_OSD,null));
-                //dismiss();
+                    EventBus.getDefault().post(new MessageEvent(MessageEvent.DEVICE_CHANGE,null));
             }
         });
     }
-
 
     private void getUserInfo() {
         uuid.setText(OsdSharePreference.getInstance(mContext).getString("uid"));

@@ -24,7 +24,6 @@ import android.view.Surface;
 import com.camera.model.api.AVAPIsClient;
 import com.decode.tools.AvcUtils;
 import com.decode.tools.BufferInfo;
-import com.jiangdg.natives.YuvUtils;
 
 /**
  * 对YUV视频流进行编码

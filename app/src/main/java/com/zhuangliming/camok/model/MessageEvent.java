@@ -12,6 +12,7 @@ public class MessageEvent {
     public static final int DEVICE_CHANGE=6;
     public static final int NET_LOSS=7;
     public static final int NET_CONNECT=8;
+    public static final int CONNECT_FAIL=9;
     private int message;
     private Object obj;
     public MessageEvent(int message,Object o) {
