@@ -10,6 +10,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import android.annotation.SuppressLint;
 import android.media.MediaCodec;
@@ -58,7 +60,7 @@ public class EncoderVideoRunnable implements Runnable {
     public EncoderVideoRunnable(WeakReference<MediaMuxerUtils> muxerRunnableRf, Surface surface) {
         this.muxerRunnableRf = muxerRunnableRf;
         this.mSurface = surface;
-        frameBytes = new ArrayBlockingQueue<BufferInfo>(5);
+        frameBytes = new LinkedBlockingDeque<>();
         Log.i(TAG, "获取视频质量");
         byte quanlity = AVAPIsClient.nowQuality;
         System.out.println("视频质量:" + quanlity);
@@ -86,7 +88,7 @@ public class EncoderVideoRunnable implements Runnable {
         Log.i(TAG, "width:" + width[0] + "; height:" + height[0]);
         mFormat = MediaFormat.createVideoFormat("video/avc", width[0], height[0]);
         mFormat.setInteger(MediaFormat.KEY_BIT_RATE, width[0] * height[0]);
-        mFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
+        //mFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
         mFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
         mFormat.setByteBuffer("csd-0", ByteBuffer.wrap(this.cur_sps));
@@ -129,7 +131,11 @@ public class EncoderVideoRunnable implements Runnable {
         if (frameBytes != null) {
             // 这里不能用put，会一直不断地向阻塞线程写入数据
             //导致线程无法退出
-            frameBytes.offer(bufferInfo);
+            try {
+                frameBytes.put(bufferInfo);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -146,7 +152,10 @@ public class EncoderVideoRunnable implements Runnable {
         // 如果编码器没有启动或者没有图像数据，线程阻塞等待
         while (!isExit) {
             try {
-                BufferInfo bytes = frameBytes.take();
+
+                BufferInfo bytes = frameBytes.poll(300, TimeUnit.MILLISECONDS);
+                Log.i("循环解码","当前取到的数据index:"+bytes.index);
+                //Thread.sleep(300);
                 encoderBytes(bytes);
             } catch (IllegalStateException e) {
                 // 捕获因中断线程并停止混合dequeueOutputBuffer报的状态异常
@@ -163,52 +172,21 @@ public class EncoderVideoRunnable implements Runnable {
 
     @SuppressLint({"NewApi", "WrongConstant"})
     private void encoderBytes(BufferInfo rawFrame) {
-        ByteBuffer[] inputBuffers = mVideoEncodec.getInputBuffers();
-        ByteBuffer[] outputBuffers = mVideoEncodec.getOutputBuffers();
-//		if(isFrontCamera()){
-        // 前置旋转270度(即竖屏采集，此时isPhoneHorizontal=false)
-//			YuvUtils.Yuv420spRotateOfFront(rawFrame, rotateNv21, mWidth, mHeight, 270);
-//		}else{
-        // 后置旋转90度(即竖直采集，此时isPhoneHorizontal=false)
-//            YuvUtils.YUV420spRotateOfBack(rawFrame, rotateNv21, mWidth, mHeight, 90);
-        // 后置旋转270度(即倒立采集，此时isPhoneHorizontal=false)
-//			YuvUtils.YUV420spRotateOfBack(rawFrame, rotateNv21, mWidth, mHeight, 270);
-        // 后置旋转180度(即反向横屏采集，此时isPhoneHorizontal=true)
-//			YuvUtils.YUV420spRotateOfBack(rawFrame, rotateNv21, mWidth, mHeight, 180);
-        // 如果是正向横屏，则无需旋转YUV，此时isPhoneHorizontal=true
-//		}
-        // 将NV21转换为编码器支持的颜色格式I420，添加时间水印
-//		if(isAddTimeOsd){
-//            YuvUtils.AddYuvOsd(rotateNv21, mWidth, mHeight, mFrameData,
-//					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),
-//					mColorFormat,isPhoneHorizontal);
-//		}else{
-//            YuvUtils.transferColorFormat(rotateNv21, mWidth, mHeight, mFrameData, mColorFormat);
-//		}
-        // 将NV21转换为YUV420p
-/*        if(mColorFormat == MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar) {
-            YuvUtils.nativeNV21ToYUV420p(rawFrame, mWidth, mHeight);
-        } else {
-            YuvUtils.nativeNV21ToYUV420sp(rawFrame,mWidth,mHeight);
-        }*/
-
-        // 叠加时间水印
-        // YuvUtils.addYuvOsd(rawFrame, width[0], height[0], true,new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), 100, 100);
-
-        //返回编码器的一个输入缓存区句柄，-1表示当前没有可用的输入缓存区
-        int inputBufferIndex = mVideoEncodec.dequeueInputBuffer(0);
+        /*ByteBuffer[] inputBuffers = mVideoEncodec.getInputBuffers();
+        ByteBuffer[] outputBuffers = mVideoEncodec.getOutputBuffers();*/
+        int inputBufferIndex = mVideoEncodec.dequeueInputBuffer(-1);
         if (inputBufferIndex >= 0) {
             Log.i(TAG, "inputBufferIndex=" + inputBufferIndex);
             // 绑定一个被空的、可写的输入缓存区inputBuffer到客户端
-            ByteBuffer inputBuffer = mVideoEncodec.getInputBuffer(inputBufferIndex);
-            if (inputBuffer == null) {
+            ByteBuffer inputBuffer = mVideoEncodec.getInputBuffers()[inputBufferIndex];
+           /* if (inputBuffer == null) {
                 return;
             }
             if (!isLollipop()) {
                 inputBuffer = inputBuffers[inputBufferIndex];
             } else {
                 inputBuffer = mVideoEncodec.getInputBuffer(inputBufferIndex);
-            }
+            }*/
             //如果录制
             MediaMuxerUtils mMuxerUtils = muxerRunnableRf.get();
             if (mMuxerUtils.isMuxerStarted()) {
@@ -244,15 +222,22 @@ public class EncoderVideoRunnable implements Runnable {
             }
             // 向输入缓存区写入有效原始数据，并提交到编码器中进行编码处理
             inputBuffer.clear();
-            inputBuffer.rewind();
             inputBuffer.put(rawFrame.buffer, 0, rawFrame.len);
-            mVideoEncodec.queueInputBuffer(inputBufferIndex, 0, rawFrame.len, 0, 0);
+            mVideoEncodec.queueInputBuffer(inputBufferIndex, 0, rawFrame.len, System.nanoTime(), 0);
+        }else{
+            return;
         }
         // 返回一个输出缓存区句柄，当为-1时表示当前没有可用的输出缓存区
         // mBufferInfo参数包含被编码好的数据，timesOut参数为超时等待的时间
         MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
-        int outputBufferIndex = -1;
-        do {
+        int outputBufferIndex =  mVideoEncodec.dequeueOutputBuffer(mBufferInfo, 0);
+        while (outputBufferIndex >= 0) {
+            //logger.d("outputBufferIndex = " + outputBufferIndex);
+            //true : 将解码的数据显示到surface上
+            mVideoEncodec.releaseOutputBuffer(outputBufferIndex, true);
+            outputBufferIndex = mVideoEncodec.dequeueOutputBuffer(mBufferInfo, 0);
+        }
+        /*do {
             outputBufferIndex = mVideoEncodec.dequeueOutputBuffer(mBufferInfo, 0);
             Log.i(TAG, "outputBufferIndex=" + inputBufferIndex);
             if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
@@ -267,7 +252,7 @@ public class EncoderVideoRunnable implements Runnable {
             // 处理结束，释放输出缓存区资源
             mVideoEncodec.releaseOutputBuffer(outputBufferIndex, true);
             //outputBufferIndex = mVideoEncodec.dequeueOutputBuffer(mBufferInfo, 0);
-    } while(outputBufferIndex >=0);
+    } while(outputBufferIndex >=0);*/
 }
 
     public void exit() {

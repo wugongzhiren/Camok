@@ -11,6 +11,13 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    defaultConfig {
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters 'armeabi' , 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
+        }
+    }
 /*    externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
@@ -45,6 +52,8 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
     implementation 'com.github.ChillingVan:android-openGL-canvas:v1.5.1.0'
     implementation 'org.greenrobot:eventbus:3.1.1'
+    implementation 'com.tencent.bugly:crashreport:3.1.0'
+    implementation 'com.tencent.bugly:nativecrashreport:3.1.0'
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.2'
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

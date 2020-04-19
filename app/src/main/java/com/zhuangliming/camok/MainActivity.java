@@ -177,15 +177,15 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         ButtonZoomTele.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                boolean bRet;
-                int lcurrentTimeMillis = Integer.parseInt(String.valueOf(1585958888));
-                bRet = Dllipcsdk.IPCNET_SetCameraTime(strIp, 90, lcurrentTimeMillis, strUsername, strPassword);
-                Log.i("设置时间", bRet + "");
-                if (bRet == true) {
+               // boolean bRet;
+                //int lcurrentTimeMillis = Integer.parseInt(String.valueOf(1585958888));
+               // bRet = Dllipcsdk.IPCNET_SetCameraTime(strIp, 90, lcurrentTimeMillis, strUsername, strPassword);
+                //Log.i("设置时间", bRet + "");
+                /*if (bRet == true) {
                     System.out.println("IPCNET_SetCameraTime:  ----- " + lcurrentTimeMillis);
-                }
+                }*/
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    AVAPIsClient.setOSD();
+                    //AVAPIsClient.setOSD();
                     AVAPIsClient.ctrlPTZ(AVAPIsClient.AVIOCTRL_LENS_ZOOM_IN, (byte) 1);
                     //bRet = Dllipcsdk.IPCNET_PTZControl(strIp, nVideoPort, Dllipcsdk.E_PTZ_COMMAND.ZOOM_TELE.ordinal(), 6, 6, false);
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -212,7 +212,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 return false;
             }
         });
-
         byte[] buffer = new byte[4];
         buffer[0] = 0x0a;
         buffer[3] = (byte) 0xe0;
@@ -222,7 +221,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     buffer[2] = 1;
-
                     TaskCenter.sharedCenter().send(buffer);
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     buffer[2] = 0;
@@ -611,8 +609,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     public int output() {
         mBI = new MediaCodec.BufferInfo();
         int i = mMC.dequeueOutputBuffer(mBI, oBUFFER_TIMEOUT);// 把转码后的数据存到mBI
-//        Log.i("output","index:"+i);
-
         while (i >= 0) {
             ByteBuffer outputBuffer = mMC.getOutputBuffers()[i];
             /**
@@ -707,7 +703,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         /*if (radioButtonCamType.isChecked()) {
             oldCam = 0;
         }*/
-        ioCtrl.initTCP();
+        //ioCtrl.initTCP();
         if (oldCam == 0) {
             //getUserInfo();
             //saveUserInfo();
@@ -1201,7 +1197,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         } else if (messageEvent.getMessage() == MessageEvent.NET_CONNECT) {
             buttonConnect.setText("正在连接");
             Toast.makeText(MainActivity.this, "网络已连接", Toast.LENGTH_SHORT).show();
-            AVAPIsClient.start(getApplicationContext(), surface);
+           // AVAPIsClient.start(getApplicationContext(), surface);
         } else if (messageEvent.getMessage() == MessageEvent.NET_LOSS) {
             buttonConnect.setText("网络断开");
             buttonConnect.setBackgroundColor(getResources().getColor(R.color.red));

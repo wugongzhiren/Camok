@@ -14,7 +14,6 @@ public class Client {
             System.out.printf("IOTCAPIs_Device exit...!!\n");
             return;
         }
-
         // alloc 3 sessions for video and two-way audio
         AVAPIs.avInitialize(3);
 

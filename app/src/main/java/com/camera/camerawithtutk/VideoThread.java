@@ -90,7 +90,7 @@ public class VideoThread implements Runnable {
             //----------------------把videobuffer信息加入阻塞队列----------------------
             try {
                 Log.i("videoBuffer","outFrameSize:"+outFrameSize[0]);
-                BufferInfo bi = new BufferInfo(outFrameSize[0], videoBuffer);
+                BufferInfo bi = new BufferInfo(outFrameSize[0], videoBuffer,1);
                 bq.offer(bi);
             } catch (Exception e) {
                 e.printStackTrace();

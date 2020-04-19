@@ -1,6 +1,8 @@
 package com.zhuangliming.camok;
 
 
+import android.util.Log;
+
 import java.io.IOException;
 
 public class IoCtrl {
@@ -9,8 +11,8 @@ public class IoCtrl {
     public final byte MOTOR_UP=1;
     public final byte MOTOR_DOWN=2;
 
-    public static  void initTCP(){
-        TaskCenter.sharedCenter().connect("192.168.1.102",9999);
+    public static  void initTCP(String ip,int port){
+        TaskCenter.sharedCenter().connect(ip,port);
         TaskCenter.sharedCenter().setDisconnectedCallback(new TaskCenter.OnServerDisconnectedCallbackBlock() {
             @Override
             public void callback(IOException e) {
@@ -20,7 +22,7 @@ public class IoCtrl {
         TaskCenter.sharedCenter().setConnectedCallback(new TaskCenter.OnServerConnectedCallbackBlock() {
             @Override
             public void callback() {
-
+                Log.i("TCP_IO","连接上了TCP");
             }
         });
         TaskCenter.sharedCenter().setReceivedCallback(new TaskCenter.OnReceiveCallbackBlock() {

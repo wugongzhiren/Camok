@@ -13,12 +13,15 @@ import com.hankvision.ipcsdk.Dllipcsdk;
 import com.hankvision.ipcsdk.JOSDInfo;
 import com.tutk.IOTC.AVAPIs;
 import com.tutk.IOTC.IOTCAPIs;
+import com.tutk.IOTC.St_SInfo;
+import com.zhuangliming.camok.IoCtrl;
 import com.zhuangliming.camok.OsdSharePreference;
 import com.zhuangliming.camok.model.MessageEvent;
 
 
 import org.greenrobot.eventbus.EventBus;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -35,6 +38,7 @@ public class AVAPIsClient {
     private static Thread audioThread;
     private static Thread videoThread;
     public static boolean isStarted = false;
+    public static IoCtrl ioCtrl;
     /**
      * 修改视频清晰度的常量
      */
@@ -100,7 +104,15 @@ public class AVAPIsClient {
         // 客户端将设备uid和tutk_platform_free session ID绑定,从而在物联网端连接设备
         ret = IOTCAPIs.IOTC_Connect_ByUID_Parallel(uid, sid);
         System.out.println("IOTC_Connect_ByUID_Parallel ret = " + ret);
-
+        St_SInfo info=new St_SInfo();
+        IOTCAPIs.IOTC_Session_Check(sid,info);
+        int ipLen=returnActualLength(info.RemoteIP);
+        byte[] tempIp = new byte[ipLen];
+        System.arraycopy(info.RemoteIP,0,tempIp,0,ipLen);
+        String ip = new String(tempIp);
+            Log.i("ip","ip地址："+ip);
+           Log.i("ip","ip端口："+info.RemotePort);
+        ioCtrl.initTCP(ip,8100);
         int[] servType = new int[1];
         // 接收AV数据前应通过AV服务器的认证
 
@@ -138,7 +150,14 @@ public class AVAPIsClient {
         //mMuxerUtils.stopMuxer();
         mMuxerUtils.releaseDecodec();
     }
-
+    public static int returnActualLength(byte[] data) {
+        int i = 0;
+        for (; i < data.length; i++) {
+            if (data[i] == '\0')
+                break;
+        }
+        return i;
+    }
     public static boolean isRecording(){
         return mMuxerUtils.isMuxerStarted();
     }
@@ -359,7 +378,7 @@ public class AVAPIsClient {
     }
 
     public static class VideoThread implements Runnable {
-        static int VIDEO_BUF_SIZE = 100000;
+        static int VIDEO_BUF_SIZE = 150000;
         static final int FRAME_INFO_SIZE = 16;
 
         private int avIndex;
@@ -378,21 +397,20 @@ public class AVAPIsClient {
             int[] outFrameSize = new int[1];
             int[] outFrmInfoBufSize = new int [1];
             //SaveFrames saveFrames = new SaveFrames();
-            byte[] videoBuffer = new byte[VIDEO_BUF_SIZE];
-            int[] frameNumber = new int[1];
-            int ret;
+            byte[] videoBuffer;
+            long index=0;
             while (true) {
                 if(mMuxerUtils.isExit){
                     return;
                 }
-                ret = av.avRecvFrameData2(avIndex, videoBuffer,
+                videoBuffer = new byte[VIDEO_BUF_SIZE];
+                int[] frameNumber = new int[1];
+                int ret = av.avRecvFrameData2(avIndex, videoBuffer,
                         VIDEO_BUF_SIZE, outBufSize, outFrameSize,
                         frameInfo, FRAME_INFO_SIZE,
                         outFrmInfoBufSize, frameNumber);
                 Log.i("视频流结果",ret+"");
-                if(ret == AVAPIs.AV_ER_BUFPARA_MAXSIZE_INSUFF){
-
-                } else if (ret == AVAPIs.AV_ER_DATA_NOREADY) {
+                if (ret == AVAPIs.AV_ER_DATA_NOREADY) {
                     try {
                        // VIDEO_BUF_SIZE=VIDEO_BUF_SIZE-50000;
                        // videoBuffer=new byte[VIDEO_BUF_SIZE];
@@ -436,7 +454,7 @@ public class AVAPIsClient {
                 /*if(videoRunnable != null){
                     videoRunnable.addData(videoBuffer);
                 }*/
-                mMuxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer));
+                mMuxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer,index++));
                 //---------------------------------------------------------------------
                 /*if (startReceive) {
                     saveFrames.saveFrames(videoBuffer, frameInfo, ret);
