@@ -66,24 +66,34 @@ public class IoCtrl {
          //   uint8_t	 bColor;   // 色彩
          //   uint8_t  text[64]; // 需要显示字符
        // }TextType;
-        System.arraycopy(intToBytes(1),0,data,10,4);
-        System.arraycopy(intToBytes(6),0,data,14,4);
-        System.arraycopy(intToBytes(32),0,data,18,4);
-        System.arraycopy(intToBytes(2),0,data,22,4);
-        System.arraycopy(intToBytes(1),0,data,26,4);
-        System.arraycopy(intToBytes(1),0,data,30,4);
+        data[10]=1;
+        //System.arraycopy(intToBytes(1),0,data,10,4);
+        data[11]=6;
+        //System.arraycopy(intToBytes(6),0,data,14,4);
+        data[12]=32;
+        //System.arraycopy(intToBytes(32),0,data,18,4);
+        data[13]=2;
+        //System.arraycopy(intToBytes(2),0,data,22,4);
+        data[14]=1;
+        //System.arraycopy(intToBytes(1),0,data,26,4);
+        data[15]=1;
+        //System.arraycopy(intToBytes(1),0,data,30,4);
         //中间略过6个字节
         //文字部分
-        System.arraycopy(intToBytes(2),0,data,40,4);
-        System.arraycopy(intToBytes(0),0,data,44,4);
-        System.arraycopy(intToBytes(1),0,data,48,4);
-        System.arraycopy(intToBytes(0),0,data,52,4);
+        data[22]=2;
+        //System.arraycopy(intToBytes(2),0,data,40,4);
+        data[23]=0;
+        //System.arraycopy(intToBytes(0),0,data,44,4);
+        data[24]=1;
+        //System.arraycopy(intToBytes(1),0,data,48,4);
+        data[25]=0;
+        //System.arraycopy(intToBytes(0),0,data,52,4);
         String text="测试文字";
         try {
             byte[] textB=text.getBytes("GBK");
             Log.i("文字",textB.length+"");
-            System.arraycopy(textB,0,data,56,textB.length);
-            data[64]='\0';
+            System.arraycopy(textB,0,data,26,textB.length);
+            data[34]='\0';
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

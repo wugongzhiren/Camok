@@ -13,6 +13,12 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 import androidx.annotation.Nullable;
 
 import static androidx.constraintlayout.widget.Constraints.TAG;
@@ -26,6 +32,7 @@ public class SplashActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         checkPermission();
+        //talk();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -99,5 +106,61 @@ public class SplashActivity extends Activity {
                 SplashActivity.this.finish();
             }
         }
+    }
+
+    //本地一个TCP客户端
+    public void talk() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ServerSocket server = null;
+                try {
+                    server = new ServerSocket(8100);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("监控端口：" + 8100);
+                Socket socket = null;
+                while (true) {
+                    try {
+                        Log.i("socket接收","等待接收");
+                        // 阻塞等待，每接收到一个请求就创建一个新的连接实例
+                        socket = server.accept();
+                        System.out.println("连接客户端地址：" + socket.getRemoteSocketAddress());
+
+                        // 装饰流BufferedReader封装输入流（接收客户端的流）
+                        BufferedInputStream bis = new BufferedInputStream(
+                                socket.getInputStream());
+
+                        DataInputStream dis = new DataInputStream(bis);
+                        byte[] bytes = new byte[1024]; // 一次读取一个byte
+                        String ret = "";
+                        Log.i("socket接收","bytes长度");
+                        while (dis.read(bytes) != -1) {
+                            byte[] temp = new byte[64];
+                            System.arraycopy(bytes,56,temp,0,8);
+                            String text = new String(temp,"GBK");
+                            Log.i("socket接收", "talk: "+text);
+                            break;
+                    /*ret += bytesToHexString(bytes) + " ";
+                    if (dis.available() == 0) { //一个请求
+                        doSomething(ret);
+                    }*/
+                        }
+
+                    } catch (IOException e) {
+                        System.out.println(e.getMessage());
+                    } finally {
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }
+            }
+        }).start();
+
+
     }
 }

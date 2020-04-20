@@ -58,9 +58,9 @@ public class TaskCenter {
             @Override
             public void run() {
                 try {
-
+                    Log.i(TAG,ipAddress+":"+port);
                     socket = new Socket(ipAddress, port);
-//                    socket.setSoTimeout ( 2 * 1000 );//设置超时时间
+                    //socket.setSoTimeout ( 4 * 1000 );//设置超时时间
                     if (isConnected()) {
                         TaskCenter.sharedCenter().ipAddress = ipAddress;
                         TaskCenter.sharedCenter().port = port;

@@ -154,6 +154,9 @@ public class EncoderVideoRunnable implements Runnable {
             try {
 
                 BufferInfo bytes = frameBytes.poll(300, TimeUnit.MILLISECONDS);
+                if(bytes==null){
+                    continue;
+                }
                // Log.i("循环解码","当前取到的数据index:"+bytes.index);
                 //Thread.sleep(300);
                 encoderBytes(bytes);

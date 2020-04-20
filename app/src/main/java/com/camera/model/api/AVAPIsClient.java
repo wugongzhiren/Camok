@@ -111,8 +111,8 @@ public class AVAPIsClient {
         System.arraycopy(info.RemoteIP,0,tempIp,0,ipLen);
         String ip = new String(tempIp);
             Log.i("ip","ip地址："+ip);
-           Log.i("ip","ip端口："+info.RemotePort);
-        //ioCtrl.initTCP("192.168.1.4",8234);
+            Log.i("ip","ip端口："+info.RemotePort);
+        //ioCtrl.initTCP("127.0.0.1",8100);
         ioCtrl.initTCP(ip,8100);
         int[] servType = new int[1];
         // 接收AV数据前应通过AV服务器的认证
@@ -472,7 +472,12 @@ public class AVAPIsClient {
                 /*if(videoRunnable != null){
                     videoRunnable.addData(videoBuffer);
                 }*/
-                mMuxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer,index++));
+                if(ret>0){
+                    mMuxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer,index++));
+                }else{
+                    continue;
+                }
+
                 //---------------------------------------------------------------------
                 /*if (startReceive) {
                     saveFrames.saveFrames(videoBuffer, frameInfo, ret);

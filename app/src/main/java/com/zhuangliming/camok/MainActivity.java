@@ -178,6 +178,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         setContentView(R.layout.activity_main);
         //注册EventBus
         EventBus.getDefault().register(this);
+        //talk();
         initView();
         initEvent();
         showOSD();
@@ -1239,46 +1240,5 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     }
 
 
-    //本地一个TCP客户端
-    public void talk() {
-        ServerSocket server = null;
-        try {
-            server = new ServerSocket(8100);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        //System.out.println("监控端口：" + port);
-        Socket socket = null;
-        while (true) {
-            try {
-                // 阻塞等待，每接收到一个请求就创建一个新的连接实例
-                socket = server.accept();
-                System.out.println("连接客户端地址：" + socket.getRemoteSocketAddress());
 
-                // 装饰流BufferedReader封装输入流（接收客户端的流）
-                BufferedInputStream bis = new BufferedInputStream(
-                        socket.getInputStream());
-
-                DataInputStream dis = new DataInputStream(bis);
-                byte[] bytes = new byte[1]; // 一次读取一个byte
-                String ret = "";
-                while (dis.read(bytes) != -1) {
-                    /*ret += bytesToHexString(bytes) + " ";
-                    if (dis.available() == 0) { //一个请求
-                        doSomething(ret);
-                    }*/
-                }
-
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
-            } finally {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        }
-
-    }
 }
