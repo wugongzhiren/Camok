@@ -58,25 +58,25 @@ public class WifiStateView  extends AppCompatImageView {
             //根据wifi的信号强度等级，更换图标
             switch (msg.what) {
                 case LEVEL_0:
-                    view.setImageResource(R.drawable.wifi2);
+                    view.setImageResource(R.drawable.wifi4);
                     break;
                 case LEVEL_1:
                     view.setImageResource(R.drawable.wifi3);
                     break;
                 case LEVEL_2:
-                    view. setImageResource(R.drawable.wifi4);
+                    view. setImageResource(R.drawable.wifi2);
                     break;
 
                 case LEVEL_3:
-                    view. setImageResource(R.drawable.wifi5);
+                    view. setImageResource(R.drawable.wifi1);
                     break;
 
                 case LEVEL_NONE:
-                    view.setImageResource(R.drawable.wifi1);
+                    view.setImageResource(R.drawable.wifi6);
                     break;
 
                 default:
-                    view.setImageResource(R.drawable.wifi5);
+                    view.setImageResource(R.drawable.wifi0);
                     break;
             }
         }

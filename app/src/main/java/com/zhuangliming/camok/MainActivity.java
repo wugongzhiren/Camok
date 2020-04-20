@@ -269,20 +269,17 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         // radioButtonCamType = (RadioButton) findViewById(R.id.radioButton);
         columImg = findViewById(R.id.imageView2);
         screenCapBt = findViewById(R.id.imageView9);
-        osdParent = findViewById(R.id.textInfoParent);
+        //osdParent = findViewById(R.id.textInfoParent);
         parentView = findViewById(R.id.parent);
         textureView = findViewById(R.id.frame);
-        taskNameTx = findViewById(R.id.taskNameTx);
-        wellNameTx = findViewById(R.id.wellNameTx);
-        checkInfoTx = findViewById(R.id.checkInfoTx);
-        checkCompanyTx = findViewById(R.id.checkCompanyTx);
+        //taskNameTx = findViewById(R.id.taskNameTx);
+        //wellNameTx = findViewById(R.id.wellNameTx);
+        //checkInfoTx = findViewById(R.id.checkInfoTx);
+        //checkCompanyTx = findViewById(R.id.checkCompanyTx);
         imageViewOSD = findViewById(R.id.imageViewOSD);
         leftTool = findViewById(R.id.leftTool);
         rightTool = findViewById(R.id.rightTool);
         recordInfo = findViewById(R.id.recordInfo);
-        //textureView.setSurfaceTextureListener(this);
-        //实例化解码器
-        //mediaCodecDecoder = new MediaCodecDecoder();
     }
 
     @Override
@@ -347,6 +344,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                     if(size<104857000){
                         //小于100M
                         Toast.makeText(MainActivity.this,"存储空间不足,请释放后再录制",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if(isFastClick()){
+                        Toast.makeText(MainActivity.this,"快速点击",Toast.LENGTH_SHORT).show();
                         return;
                     }
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang_2));
@@ -1226,6 +1227,16 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
     }
 
-
+    private static final int MIN_CLICK_DELAY_TIME = 200;
+    private static long lastClickTime;
+    public static boolean isFastClick() {
+        boolean flag = true;
+        long curClickTime = System.currentTimeMillis();
+        if ((curClickTime - lastClickTime) >= MIN_CLICK_DELAY_TIME) {
+            flag = false;
+        }
+        lastClickTime = curClickTime;
+        return flag;
+    }
 
 }

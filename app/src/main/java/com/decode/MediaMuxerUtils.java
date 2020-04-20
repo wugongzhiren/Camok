@@ -78,15 +78,15 @@ public class MediaMuxerUtils {
                     } else {
                         MuxerData data = mMuxerDatas.remove(0);
                         if (data != null) {
-                            int track = 0;
+                            //int track = 0;
                             try {
                                 //if (data.trackIndex == TRACK_VIDEO) {
                                    // track = videoTrack;
-                                    Log.d(TAG, "录制---写入视频数据---");
+                                    Log.d(TAG, "录制---写入视频数据---videoTrackIndex="+videoTrackIndex);
                                 //}
                                 mMuxer.writeSampleData(videoTrackIndex, data.byteBuf, data.bufferInfo);
                             } catch (Exception e) {
-                                Log.e(TAG, "录制--写入数据到混合器失败，track=" + track);
+                                Log.e(TAG, "录制--写入数据到混合器失败，track=" + videoTrackIndex);
                                 e.printStackTrace();
                             }
                         }
@@ -149,24 +149,6 @@ public class MediaMuxerUtils {
             mMuxer = null;
         }
     }
-
-   /* // 添加音、视频轨道
-    public void record(int index, MediaFormat meidaFormat) {
-        Log.i(TAG, "录制--添加轨道，index=" + index);
-        if (mMuxer == null && isMuxerStarted) {
-            Log.e(TAG, "录制--添加轨道失败或混合器已经启动，index=" + index);
-            return;
-        }
-        if (index == TRACK_VIDEO) {
-            if (videoMediaFormat == null) {
-                videoMediaFormat = meidaFormat;
-                videoTrack = mMuxer.addTrack(videoMediaFormat);
-                isVideoAdded = true;
-                Log.d(TAG, "录制--添加视频轨道到混合器---");
-            }
-        }
-        startMuxer();
-    }*/
 
     // 向MediaMuxer添加数据
     public void addMuxerData(MuxerData data) {

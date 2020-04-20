@@ -46,7 +46,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginStart="16dp"
-            android:src="@drawable/osd_normal"
+            android:src="@drawable/osd_show_selector"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/imageView2"
             app:layout_constraintTop_toTopOf="parent" />
@@ -106,12 +106,12 @@
             tools:layout_editor_absoluteX="0dp" >
 
         </TextureView>
-        <LinearLayout
+       <!-- <LinearLayout
             android:id="@+id/textInfoParent"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="10dp"
             android:orientation="vertical"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
         <LinearLayout
@@ -130,7 +130,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
-            <LinearLayout
+            &lt;!&ndash;<LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
@@ -144,7 +144,7 @@
                     android:id="@+id/wellNameTx"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
-            </LinearLayout>
+            </LinearLayout>&ndash;&gt;
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
@@ -176,19 +176,28 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
             </LinearLayout>
-        </LinearLayout>
+        </LinearLayout>-->
         <LinearLayout
             android:id="@+id/leftTool"
             android:layout_marginLeft="16dp"
             android:layout_gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
+            android:visibility="visible"
             android:orientation="vertical">
+            <ImageButton
+                android:id="@+id/celiang"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/celiang_selector"
+                android:onClick="onClickOpenLed2"
+                />
+
             <ImageButton
                 android:id="@+id/buttonLED2"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/deng4"
                 android:onClick="onClickOpenLed2"
                 />
@@ -200,18 +209,29 @@
                 android:background="@drawable/shang"
                  />
             <ImageButton
+                android:id="@+id/auto"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/auto_selector"
+                android:onClick="onClickOpenLed2"
+                />
+            <ImageButton
                 android:id="@+id/imageViewMotorDown"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/xia" />
+            <com.zhuangliming.camok.view.VerticalSeekBar
+                android:layout_width="40dp"
+                android:layout_height="100dp"/>
         </LinearLayout>
         <LinearLayout
             android:id="@+id/rightTool"
             android:layout_marginRight="16dp"
             android:layout_gravity="right|center_vertical"
             android:orientation="vertical"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
@@ -219,7 +239,7 @@
                 android:id="@+id/imageViewZOOM_TELE"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/add_normal"
+                android:background="@drawable/add_selector"
                 />
 
             <ImageButton
@@ -227,7 +247,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/sub_normal"
+                android:background="@drawable/zoom_wide_selector"
                 />
 
             <ImageButton
@@ -245,6 +265,13 @@
                 android:layout_marginTop="16dp"
                 android:background="@drawable/screencap_selector"
                />
+            <ImageButton
+                android:id="@+id/yuntai"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/yuntai_selector"
+                />
         </LinearLayout>
         <LinearLayout
             android:visibility="gone"
