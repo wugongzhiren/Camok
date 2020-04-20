@@ -58,9 +58,16 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -302,9 +309,11 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 int osdShow = OsdSharePreference.getInstance(this).getInt("osd", 0);
                 if (0 == osdShow) {
                     setOsdInfo();
+                    AVAPIsClient.setOSD1();
                     osdParent.setVisibility(View.VISIBLE);
                     OsdSharePreference.getInstance(this).putInt("osd", 1);
                 } else {
+                    AVAPIsClient.setOSD1();
                     osdParent.setVisibility(View.GONE);
                     OsdSharePreference.getInstance(this).putInt("osd", 0);
                 }
@@ -331,6 +340,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                     System.out.println("IPCNET_CapturePicture:  ----- " + nPicLenth);
                 }*/
                 //StartRecord(v);
+                //AVAPIsClient.setOSD1();
                 takeScreenShot();
             }
         });
@@ -1228,4 +1238,47 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
     }
 
+
+    //本地一个TCP客户端
+    public void talk() {
+        ServerSocket server = null;
+        try {
+            server = new ServerSocket(8100);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //System.out.println("监控端口：" + port);
+        Socket socket = null;
+        while (true) {
+            try {
+                // 阻塞等待，每接收到一个请求就创建一个新的连接实例
+                socket = server.accept();
+                System.out.println("连接客户端地址：" + socket.getRemoteSocketAddress());
+
+                // 装饰流BufferedReader封装输入流（接收客户端的流）
+                BufferedInputStream bis = new BufferedInputStream(
+                        socket.getInputStream());
+
+                DataInputStream dis = new DataInputStream(bis);
+                byte[] bytes = new byte[1]; // 一次读取一个byte
+                String ret = "";
+                while (dis.read(bytes) != -1) {
+                    /*ret += bytesToHexString(bytes) + " ";
+                    if (dis.available() == 0) { //一个请求
+                        doSomething(ret);
+                    }*/
+                }
+
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        }
+
+    }
 }

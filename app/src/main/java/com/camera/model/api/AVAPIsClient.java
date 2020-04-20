@@ -112,10 +112,10 @@ public class AVAPIsClient {
         String ip = new String(tempIp);
             Log.i("ip","ip地址："+ip);
            Log.i("ip","ip端口："+info.RemotePort);
+        //ioCtrl.initTCP("192.168.1.4",8234);
         ioCtrl.initTCP(ip,8100);
         int[] servType = new int[1];
         // 接收AV数据前应通过AV服务器的认证
-
         avIndex = AVAPIs.avClientStart(sid, username, password, 20000, servType, 0);
         AVAPIsClient.avIndex = avIndex;
         if (avIndex < 0) {
@@ -194,6 +194,18 @@ public class AVAPIsClient {
 
         return true;
     }
+
+/*    public static void setOSD(){
+        JOSDInfo josdInfo = Dllipcsdk.IPCNET_GetOsdInfo(strIp, 80, avIndex, strUsername, strPassword);
+        Log.i("SetParam", "开始获取OSD"+josdInfo==null?"没获取到":"获取到了");
+        if (josdInfo != null) {
+            Log.i("SetParam", "josdInfo:  ----- " + josdInfo.TextOSDTitle);
+            //System.out.println("josdInfo:  ----- " + josdInfo.TextOSDTitle);
+
+            // Dllipcsdk.IPCNET_SetOsdInfo(strIp, nHttpPort, 0, josdInfo, strUsername, strPassword);
+        }
+    }*/
+
     public static void getOSD(){
         JOSDInfo josdInfo = Dllipcsdk.IPCNET_GetOsdInfo(strIp, 80, avIndex, strUsername, strPassword);
         Log.i("SetParam", "开始获取OSD"+josdInfo==null?"没获取到":"获取到了");
@@ -334,6 +346,12 @@ public class AVAPIsClient {
         result[5] = 0;//channel
         int ret = av.avSendIOCtrl(avIndex, IOTYPE_USER_IPCAM_SET_TIMEZONE_RESP   ,result,268);
         Log.i("setOSD结果",ret+"");
+    }
+
+    public  static void setOSD1(){
+
+        ioCtrl.writeOsd();
+       // Log.i("setOSD结果",ret+"");
     }
     /**
      * 关闭连接

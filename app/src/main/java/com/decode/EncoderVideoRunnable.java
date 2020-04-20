@@ -154,10 +154,14 @@ public class EncoderVideoRunnable implements Runnable {
             try {
 
                 BufferInfo bytes = frameBytes.poll(300, TimeUnit.MILLISECONDS);
-                Log.i("循环解码","当前取到的数据index:"+bytes.index);
+               // Log.i("循环解码","当前取到的数据index:"+bytes.index);
                 //Thread.sleep(300);
                 encoderBytes(bytes);
             } catch (IllegalStateException e) {
+                //mVideoEncodec.flush();
+               // mVideoEncodec.reset();
+                //mVideoEncodec.configure(mFormat, mSurface, null, 0);
+               // mVideoEncodec.start();
                 // 捕获因中断线程并停止混合dequeueOutputBuffer报的状态异常
                 e.printStackTrace();
             } catch (NullPointerException e) {
