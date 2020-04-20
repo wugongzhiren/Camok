@@ -109,11 +109,11 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     private byte[] cur_sps;
     private byte[] pps = {0, 0, 0, 1, 104, -18, 60, -128/*,0,0,0,1,6,-27,1,91,-128*/};
 
-    private Thread t1;
+    //private Thread t1;
     private boolean isConnected = false;
-    MediaCodecDecoder mediaCodecDecoder; //解码器
-    public static BlockingDeque<BufferInfo> bq;
-    public BlockingDeque<BufferInfo> xbq;
+    //MediaCodecDecoder mediaCodecDecoder; //解码器
+    //public static BlockingDeque<BufferInfo> bq;
+    //public BlockingDeque<BufferInfo> xbq;
     public IoCtrl ioCtrl;
     private Button buttonConnect;
     private ImageView imageViewLed2;
@@ -165,7 +165,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 //Toast.makeText(getApplicationContext(), "关闭PopupMenu", Toast.LENGTH_SHORT).show();
             }
         });
-
         popupMenu.show();
     }
 
@@ -181,7 +180,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         //talk();
         initView();
         initEvent();
-        showOSD();
+        //todo 暂时调用接口
+        //showOSD();
         ButtonZoomTele.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -253,7 +253,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 return false;
             }
         });
-        /*SetParam(osdInfoTx);*/
     }
 
     private void initView() {
@@ -282,22 +281,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         rightTool = findViewById(R.id.rightTool);
         recordInfo = findViewById(R.id.recordInfo);
         //textureView.setSurfaceTextureListener(this);
-        /*glSurfaceView.setEGLContextClientVersion(2);
-        glSurfaceView.setRenderer(new MyRender());
-        *//*渲染方式，RENDERMODE_WHEN_DIRTY表示被动渲染，只有在调用requestRender或者onResume等方法时才会进行渲染。RENDERMODE_CONTINUOUSLY表示持续渲染*//*
-        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);*/
         //实例化解码器
         //mediaCodecDecoder = new MediaCodecDecoder();
-        // 初始化
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.i("connectIPC", "connectIPC auto");
-                //StartRaw(buttonConnect);
-
-            }
-        }, 2000);
-        // 此线程从阻塞队列poll buffer信息并送入解码
     }
 
     @Override
@@ -309,13 +294,13 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             case R.id.imageViewOSD:
                 int osdShow = OsdSharePreference.getInstance(this).getInt("osd", 0);
                 if (0 == osdShow) {
-                    setOsdInfo();
-                    AVAPIsClient.setOSD1();
-                    osdParent.setVisibility(View.VISIBLE);
+                    //setOsdInfo();
+                    AVAPIsClient.openOSD();
+                    //osdParent.setVisibility(View.VISIBLE);
                     OsdSharePreference.getInstance(this).putInt("osd", 1);
                 } else {
-                    AVAPIsClient.setOSD1();
-                    osdParent.setVisibility(View.GONE);
+                    AVAPIsClient.closeOSD();
+                    //osdParent.setVisibility(View.GONE);
                     OsdSharePreference.getInstance(this).putInt("osd", 0);
                 }
                 break;
@@ -919,7 +904,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         if (!file.exists()) {
             file.mkdirs();
         }
-        Bitmap mScreenBitmap = drawText2Bitmap(textureView.getBitmap(), this);
+        //Bitmap mScreenBitmap = drawText2Bitmap(textureView.getBitmap(), this);
+        Bitmap mScreenBitmap = textureView.getBitmap();
         try {
             FileOutputStream out = new FileOutputStream(imagePath);
             mScreenBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -1163,7 +1149,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         } else if (messageEvent.getMessage() == MessageEvent.CONNECT_SUCCESS) {
             //表示连接成功
             isConnected = true;
-            showOSD();
+            //showOSD();
             camConnect = 1;
             leftTool.setVisibility(View.VISIBLE);
             rightTool.setVisibility(View.VISIBLE);
@@ -1172,7 +1158,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         } else if (messageEvent.getMessage() == MessageEvent.CONNECT_FAIL) {
             //表示连接成功
             isConnected = false;
-            showOSD();
+            //showOSD();
             camConnect = 1;
             leftTool.setVisibility(View.VISIBLE);
             rightTool.setVisibility(View.VISIBLE);
@@ -1185,8 +1171,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 addOsdInfoToVideo((String) messageEvent.getObj());
             }
         } else if (messageEvent.getMessage() == MessageEvent.SHOW_OSD) {
-            setOsdInfo();
-            osdParent.setVisibility(View.VISIBLE);
+            //setOsdInfo();
+            //osdParent.setVisibility(View.VISIBLE);
+            AVAPIsClient.showOsd();
         } else if (messageEvent.getMessage() == MessageEvent.DEVICE_CHANGE) {
             //设备切换
             if (AVAPIsClient.isRecording()) {

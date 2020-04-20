@@ -113,7 +113,7 @@ public class AVAPIsClient {
             Log.i("ip","ip地址："+ip);
             Log.i("ip","ip端口："+info.RemotePort);
         //ioCtrl.initTCP("127.0.0.1",8100);
-        ioCtrl.initTCP(ip,8100);
+        ioCtrl.initTCP(ip,8100,context);
         int[] servType = new int[1];
         // 接收AV数据前应通过AV服务器的认证
         avIndex = AVAPIs.avClientStart(sid, username, password, 20000, servType, 0);
@@ -349,9 +349,16 @@ public class AVAPIsClient {
     }
 
     public  static void setOSD1(){
-
         ioCtrl.writeOsd();
-       // Log.i("setOSD结果",ret+"");
+    }
+    public  static void openOSD(){
+        ioCtrl.showOsd();
+    }
+    public  static void closeOSD(){
+        ioCtrl.closeOsd();
+    }
+    public static void showOsd(){
+        ioCtrl.showOsd();
     }
     /**
      * 关闭连接
@@ -396,7 +403,7 @@ public class AVAPIsClient {
     }
 
     public static class VideoThread implements Runnable {
-        static int VIDEO_BUF_SIZE = 150000;
+        static int VIDEO_BUF_SIZE = 200000;
         static final int FRAME_INFO_SIZE = 16;
 
         private int avIndex;

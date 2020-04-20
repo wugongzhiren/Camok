@@ -37,7 +37,6 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="16dp"
-            android:src="@drawable/seil100"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/imageSettings"
             app:layout_constraintTop_toTopOf="parent" />
@@ -91,14 +90,6 @@
             app:layout_constraintEnd_toStartOf="@+id/battery"
             app:layout_constraintTop_toTopOf="parent" />
 
-      <!--  <RadioButton
-            android:id="@+id/radioButton"
-            android:layout_width="120dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="16dp"
-            android:text="新/旧相机"
-            app:layout_constraintStart_toEndOf="@+id/imageViewOSD"
-            app:layout_constraintTop_toTopOf="parent" />-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

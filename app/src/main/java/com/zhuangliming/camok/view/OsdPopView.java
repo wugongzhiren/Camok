@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import com.zhuangliming.camok.MainActivity;
 import com.zhuangliming.camok.OsdSharePreference;
 import com.zhuangliming.camok.R;
 import com.zhuangliming.camok.model.MessageEvent;
@@ -108,6 +109,10 @@ public class OsdPopView extends PopupWindow {
         wellNameEdit=mContentView.findViewById(R.id.wellName);
         checkInfoEdit=mContentView.findViewById(R.id.checkInfo);
         checkCompanyEdit=mContentView.findViewById(R.id.checkCompany);
+        taskNameEdit.setText(OsdSharePreference.getInstance(mContext).getString("taskname"));
+        wellNameEdit.setText(OsdSharePreference.getInstance(mContext).getString("wellname"));
+        checkInfoEdit.setText(OsdSharePreference.getInstance(mContext).getString("checkinfo"));
+        checkCompanyEdit.setText(OsdSharePreference.getInstance(mContext).getString("checkcompany"));
     }
 
     private void initListener() {
@@ -125,6 +130,7 @@ public class OsdPopView extends PopupWindow {
                 OsdSharePreference.getInstance(mContext).putString("wellname",wellNameEdit.getText().toString());
                 OsdSharePreference.getInstance(mContext).putString("checkinfo",checkInfoEdit.getText().toString());
                 OsdSharePreference.getInstance(mContext).putString("checkcompany",checkCompanyEdit.getText().toString());
+                OsdSharePreference.getInstance(mContext).putInt("osd",1);
                 EventBus.getDefault().post(new MessageEvent(MessageEvent.SHOW_OSD,null));
                 dismiss();
             }

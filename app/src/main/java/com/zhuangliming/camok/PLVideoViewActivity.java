@@ -3,6 +3,7 @@ package com.zhuangliming.camok;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.pili.pldroid.player.AVOptions;
@@ -28,6 +29,7 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
     private int mDisplayAspectRatio = PLVideoView.ASPECT_RATIO_FIT_PARENT;
     private TextView mStatInfoTextView;
     private MediaController mMediaController;
+    private ImageButton close;
 
     //private boolean mIsLiveStreaming;
 
@@ -41,7 +43,7 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         //mIsLiveStreaming = getIntent().getIntExtra("liveStreaming", 1) == 1;
 
         mVideoView = findViewById(R.id.VideoView);
-
+        close=findViewById(R.id.close);
        // View loadingView = findViewById(R.id.LoadingView);
         //mVideoView.setBufferingIndicator(loadingView);
 
@@ -94,6 +96,12 @@ public class PLVideoViewActivity extends VideoPlayerBaseActivity {
         mMediaController = new MediaController(this, true, false);
         //mMediaController.setOnClickSpeedAdjustListener(mOnClickSpeedAdjustListener);
         mVideoView.setMediaController(mMediaController);
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PLVideoViewActivity.this.finish();
+            }
+        });
     }
 
     @Override
