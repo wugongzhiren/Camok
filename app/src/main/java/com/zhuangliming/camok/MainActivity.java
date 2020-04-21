@@ -332,6 +332,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             public void onClick(View v) {
 
                 if (AVAPIsClient.mMuxerUtils.isMuxerStarted()) {
+                    if(isFastClick()){
+                        Toast.makeText(MainActivity.this,"录制时间过短",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang));
                     Toast.makeText(MainActivity.this, "结束录制", Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.GONE);
@@ -347,7 +351,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                         return;
                     }
                     if(isFastClick()){
-                        Toast.makeText(MainActivity.this,"快速点击",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this,"录制正在保存中，请稍候",Toast.LENGTH_SHORT).show();
                         return;
                     }
                     recordBt.setBackground(getResources().getDrawable(R.drawable.shexiang_2));
@@ -1003,7 +1007,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         AVAPIsClient.stopDecode();
         AVAPIsClient.close();
     }
-
     public void displayDialog() {
         OsdPopView myPopupWindow = new OsdPopView(this);
         myPopupWindow.showAtLocation(parentView, Gravity.CENTER, 0, 0);
@@ -1227,11 +1230,12 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
     }
 
-    private static final int MIN_CLICK_DELAY_TIME = 200;
+    private static final int MIN_CLICK_DELAY_TIME = 2000;
     private static long lastClickTime;
     public static boolean isFastClick() {
         boolean flag = true;
         long curClickTime = System.currentTimeMillis();
+        Log.i("isFastClick",curClickTime+"");
         if ((curClickTime - lastClickTime) >= MIN_CLICK_DELAY_TIME) {
             flag = false;
         }

@@ -183,7 +183,7 @@
             android:layout_gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="visible"
+            android:visibility="gone"
             android:orientation="vertical">
             <ImageButton
                 android:id="@+id/celiang"
@@ -231,7 +231,7 @@
             android:layout_marginRight="16dp"
             android:layout_gravity="right|center_vertical"
             android:orientation="vertical"
-            android:visibility="visible"
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 

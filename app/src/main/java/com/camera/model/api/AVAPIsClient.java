@@ -38,7 +38,7 @@ public class AVAPIsClient {
     private static Thread audioThread;
     private static Thread videoThread;
     public static boolean isStarted = false;
-    public static IoCtrl ioCtrl;
+
     /**
      * 修改视频清晰度的常量
      */
@@ -113,7 +113,7 @@ public class AVAPIsClient {
             Log.i("ip","ip地址："+ip);
             Log.i("ip","ip端口："+info.RemotePort);
         //ioCtrl.initTCP("127.0.0.1",8100);
-        ioCtrl.initTCP(ip,8100,context);
+        IoCtrl.getInstance().initTCP(ip,8100,context);
         int[] servType = new int[1];
         // 接收AV数据前应通过AV服务器的认证
         avIndex = AVAPIs.avClientStart(sid, username, password, 20000, servType, 0);
@@ -348,17 +348,20 @@ public class AVAPIsClient {
         Log.i("setOSD结果",ret+"");
     }
 
-    public  static void setOSD1(){
+  /*  public  static void setOSD1(){
         ioCtrl.writeOsd();
-    }
+    }*/
     public  static void openOSD(){
-        ioCtrl.showOsd();
+        Log.i("OSD","openOSD");
+        IoCtrl.getInstance().tempTimer();
     }
     public  static void closeOSD(){
-        ioCtrl.closeOsd();
+        Log.i("OSD","closeOSD");
+        IoCtrl.getInstance().closeOsd();
     }
     public static void showOsd(){
-        ioCtrl.showOsd();
+        Log.i("OSD","showOsd");
+        IoCtrl.getInstance().tempTimer();
     }
     /**
      * 关闭连接
