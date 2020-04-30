@@ -353,7 +353,9 @@ public class AVAPIsClient {
     }*/
     public  static void openOSD(){
         Log.i("OSD","openOSD");
+        IoCtrl.getInstance().showOsdInfo();
         IoCtrl.getInstance().tempTimer();
+
     }
     public  static void closeOSD(){
         Log.i("OSD","closeOSD");
@@ -361,6 +363,7 @@ public class AVAPIsClient {
     }
     public static void showOsd(){
         Log.i("OSD","showOsd");
+        IoCtrl.getInstance().showOsdInfo();
         IoCtrl.getInstance().tempTimer();
     }
     /**

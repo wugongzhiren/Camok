@@ -34,6 +34,7 @@ public class IoCtrl {
         }
         return instance;
     }
+
     public void initTCP(String ip, int port, Context context) {
         mContext = context.getApplicationContext();
         TaskCenter.sharedCenter().connect(ip, port);
@@ -96,9 +97,9 @@ public class IoCtrl {
     }*/
 
     public void closeOsd() {
-        if(runnable!=null&&pollingUtil!=null){
+        if (runnable != null && pollingUtil != null) {
             pollingUtil.endPolling(runnable);
-            Log.i("OSD","先停止定时任务");
+            Log.i("OSD", "先停止定时任务");
         }
         byte[] data = new byte[1024];
         //head 头，固定
@@ -128,7 +129,7 @@ public class IoCtrl {
         try {
             //写入第一行信息
             String taskname = OsdSharePreference.getInstance(mContext).getString("taskname");
-            taskname="检测任务:"+taskname;
+            taskname = "检测任务:" + taskname;
             data[22] = 2;// 0-不显示，1-要显示，2-要显示并且数据有改动
             data[23] = 0;//bXPos
             data[24] = 1;//bYPos;
@@ -142,7 +143,7 @@ public class IoCtrl {
             data[92] = 2;//bYPos;
             data[93] = 0;//bColor;   // 色彩
             String wellname = OsdSharePreference.getInstance(mContext).getString("wellname");
-            wellname="井号信息:"+wellname;
+            wellname = "井号信息:" + wellname;
             byte[] wellnameB = wellname.getBytes("GBK");
             System.arraycopy(wellnameB, 0, data, 94, wellnameB.length);
             data[94 + wellnameB.length] = '\0';
@@ -152,7 +153,7 @@ public class IoCtrl {
             data[160] = 3;//bYPos;
             data[161] = 0;//bColor;   // 色彩
             String checkinfo = OsdSharePreference.getInstance(mContext).getString("checkinfo");
-            checkinfo="检测信息:"+checkinfo;
+            checkinfo = "检测信息:" + checkinfo;
             byte[] checkinfoB = checkinfo.getBytes("GBK");
             System.arraycopy(checkinfoB, 0, data, 162, checkinfoB.length);
             data[162 + checkinfoB.length] = '\0';
@@ -162,7 +163,7 @@ public class IoCtrl {
             data[228] = 4;//bYPos;
             data[229] = 0;//bColor;   // 色彩
             String checkcompany = OsdSharePreference.getInstance(mContext).getString("checkcompany");
-            checkcompany="检测单位:"+checkcompany;
+            checkcompany = "检测单位:" + checkcompany;
             byte[] checkcompanyB = checkcompany.getBytes("GBK");
             System.arraycopy(checkcompanyB, 0, data, 230, checkcompanyB.length);
             data[230 + checkcompanyB.length] = '\0';
@@ -246,33 +247,40 @@ public class IoCtrl {
     //随机生成第五行数据
     PollingUtil pollingUtil;
     Runnable runnable;
-    public void tempTimer(){
+
+    public void tempTimer() {
 //每3秒打印一次日志
-         pollingUtil = new PollingUtil(new Handler(getMainLooper()));
-         runnable= new Runnable() {
+        pollingUtil = new PollingUtil(new Handler(getMainLooper()));
+        runnable = new Runnable() {
             @Override
             public void run() {
-                showOsdInterval();
+                setOSDDistance();
                 Log.e("OSD", "----------handler 定时轮询任务----------");
             }
         };
         pollingUtil.startPolling(runnable, 5000, true);
     }
+
     byte[] dataTem;
-    private void showOsdInterval(){
-        if(dataTem==null) {
-            dataTem=new byte[1024];
+
+    public void showOsdInfo() {
+
+            dataTem = new byte[1024];
             dataTem[6] = 0x11;
             dataTem[7] = (byte) 0xa8;
             dataTem[8] = 0x01;
             dataTem[9] = (byte) 0xa4;
             dataTem[10] = 1;// 0-不显示，1-要显示
             dataTem[11] = 6;// 最多要显示的行数  1-12 ，其它值默认为6
-            dataTem[12] = 32;// 每行最多需要显示的字符数  1-64，其它值默认为32
-            dataTem[13] = 2;// 字体大小，1-16*16，2-32*32，3-48*48，4-64*64，其它值为自动
+            dataTem[12] = 64;// 每行最多需要显示的字符数  1-64，其它值默认为32
+            dataTem[13] = 3;// 字体大小，1-16*16，2-32*32，3-48*48，4-64*64，其它值为自动
             dataTem[14] = 1;// 0-动态显示，1-保存显示
             dataTem[15] = 1;// 1-数据有修改，需要显示刷新， 内部用
-            //中间保留6个字节
+            dataTem[16] = 1;// 每个text是分一行还是两行来显示，1一行最多64字节，2两行分成两个32字节//bDispLinePerTxet
+            dataTem[17] = 1;// 背景,暂无效
+            dataTem[18] = 0;//bDispChl;   // 在哪个通道上显示 1-3 0默认
+            dataTem[19] = 0;// 6-每行可以单独指定位置，0-只需指定第一行位置
+            //中间保留2个字节
             //文字部分，目前是4行显示，除去文字信息，还能使用64个字节
             //byte[] tasknameB;
             try {
@@ -316,17 +324,20 @@ public class IoCtrl {
                 byte[] checkcompanyB = checkcompany.getBytes("GBK");
                 System.arraycopy(checkcompanyB, 0, dataTem, 230, checkcompanyB.length);
                 dataTem[230 + checkcompanyB.length] = '\0';
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
             /*String text = "测试文字";
             byte[] textB = text.getBytes("GBK");
             Log.i("文字", textB.length + "");
             System.arraycopy(textB, 0, data, 26, textB.length);
             data[34] = '\0';*/
                 //写入第5行距离动态信息
-                dataTem[294] = 2;// 0-不显示，1-要显示，2-要显示并且数据有改动
+               /* dataTem[294] = 2;// 0-不显示，1-要显示，2-要显示并且数据有改动
                 dataTem[295] = 0;//bXPos
                 dataTem[296] = 5;//bYPos;
                 dataTem[297] = 0;//bColor;   // 色彩
-                Random random=new Random();
+                Random random = new Random();
                 int dis = random.nextInt(5) + 100;
                 String distance = "距离:" + dis + "米";
                 //checkcompany="检测单位:"+checkcompany;
@@ -335,8 +346,8 @@ public class IoCtrl {
                 dataTem[298 + distanceB.length] = '\0';
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
-            }
-        }else{
+            }*/
+         /*else {
             dataTem[14] = 1;
             dataTem[22] = 1;
             dataTem[90] = 1;
@@ -347,7 +358,7 @@ public class IoCtrl {
             dataTem[295] = 0;//bXPos
             dataTem[296] = 5;//bYPos;
             dataTem[297] = 0;//bColor;   // 色彩
-            Random random=new Random();
+            Random random = new Random();
             int dis = random.nextInt(5) + 100;
             String distance = "距离:" + dis + "米";
             //checkcompany="检测单位:"+checkcompany;
@@ -359,8 +370,35 @@ public class IoCtrl {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
         TaskCenter.sharedCenter().send(dataTem);
+    }
+
+    byte[] dataDis;
+
+    public void setOSDDistance() {
+        if (dataDis == null) {
+            dataDis = new byte[1024];
+            dataDis[6] = 0x11;
+            dataDis[7] = (byte) 0x90;
+            dataDis[8] = 0x0;
+            dataDis[9] = (byte) 0x60;
+            dataDis[10] = 1;
+            dataDis[12] = 1;
+            //dataDis[14] = 1;//字符串1
+            Random random = new Random();
+            int dis = random.nextInt(5) + 100;
+            String distance = "距离:" + dis + "米";
+            try {
+                byte[] distanceB = distance.getBytes("GBK");
+                System.arraycopy(distanceB, 0, dataDis, 14, distanceB.length);
+                dataDis[14 + distanceB.length] = '\0';
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            dataDis[82] = 13;
+        }
+        TaskCenter.sharedCenter().send(dataDis);
     }
 }
 
