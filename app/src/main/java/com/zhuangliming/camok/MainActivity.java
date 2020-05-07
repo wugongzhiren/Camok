@@ -177,11 +177,8 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         setContentView(R.layout.activity_main);
         //注册EventBus
         EventBus.getDefault().register(this);
-        //talk();
         initView();
         initEvent();
-        //todo 暂时调用接口
-        //showOSD();
         ButtonZoomTele.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -386,13 +383,6 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         final String path = dirpath + "/" + df.format(new Date()) + "111.mp4";
         String[] commands = FFmpegCommandCenter.addTextMark(textMark, videoUrl, path);
         final String[] _commands = commands;
-
-        /*Runnable compoundRun=new Runnable() {
-            @Override
-            public void run() {
-
-        };*/
-        // ThreadPoolUtils.execute(compoundRun);
     }
 
     //辅助灯

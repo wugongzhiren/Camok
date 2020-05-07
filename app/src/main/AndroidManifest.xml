@@ -46,7 +46,6 @@
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         </activity>
-        <service android:name="com.zhuangliming.camok.ScreenService"></service>
     </application>
 
 </manifest>
