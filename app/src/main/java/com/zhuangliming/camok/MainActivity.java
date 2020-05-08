@@ -39,6 +39,7 @@ import com.camera.camerawithtutk.VideoThread;
 import com.camera.model.VideoInfo;
 import com.camera.model.api.AVAPIsClient;
 import com.decode.MediaCodecDecoder;
+import com.decode.MediaMuxerUtils;
 import com.decode.VideoDecoder;
 import com.decode.tools.AvcUtils;
 import com.decode.tools.BufferInfo;
@@ -179,6 +180,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         EventBus.getDefault().register(this);
         initView();
         initEvent();
+        initData();
         ButtonZoomTele.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -328,7 +330,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             @Override
             public void onClick(View v) {
 
-                if (AVAPIsClient.mMuxerUtils.isMuxerStarted()) {
+                if (MediaMuxerUtils.muxerUtils.isMuxerStarted()) {
                     if(isFastClick()){
                         Toast.makeText(MainActivity.this,"录制时间过短",Toast.LENGTH_SHORT).show();
                         return;
@@ -337,7 +339,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                     Toast.makeText(MainActivity.this, "结束录制", Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.GONE);
                     //AVAPIsClient.mMuxerUtils.se()=false;
-                    AVAPIsClient.mMuxerUtils.stopMuxer();
+                    MediaMuxerUtils.muxerUtils.stopMuxer();
                 } else {
                     //检测存储空间
                     long size=getAvailableExternalMemorySize();
@@ -355,7 +357,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                     Toast.makeText(MainActivity.this, "开始录制", Toast.LENGTH_SHORT).show();
                     recordInfo.setVisibility(View.VISIBLE);
                     //AVAPIsClient.mMuxerUtils.isRecord=true;
-                    AVAPIsClient.mMuxerUtils.startMuxer();
+                    MediaMuxerUtils.muxerUtils.startMuxer();
                 }
 
             }
@@ -365,6 +367,9 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         columImg.setOnClickListener(this);
         textureView.setSurfaceTextureListener(this);
         imageViewSettings.setOnClickListener(this);
+    }
+    private void initData(){
+        AVAPIsClient.start(MainActivity.this.getApplicationContext());
     }
 
     public void showOSD() {
@@ -965,7 +970,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.i("Decode", "onSurfaceTextureAvailable");
         this.surface = new Surface(surface);
-        AVAPIsClient.start(MainActivity.this.getApplicationContext(), this.surface);
+        MediaMuxerUtils.getMuxerRunnableInstance(this.surface).startDecode();
     }
 
     @Override
@@ -994,7 +999,10 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
         EventBus.getDefault().unregister(this);
         //mediaCodecDecoder.release();
         // t1.interrupt();
-        AVAPIsClient.stopDecode();
+        if(MediaMuxerUtils.muxerUtils!=null){
+            MediaMuxerUtils.muxerUtils.exit();
+        }
+        //AVAPIsClient.stopDecode();
         AVAPIsClient.close();
     }
     public void displayDialog() {
@@ -1134,13 +1142,17 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             displayPhotoPop((String) messageEvent.getObj());
         } else if (messageEvent.getMessage() == MessageEvent.PREVIEW_VIDEO) {
             //预览视频
-            AVAPIsClient.stopDecode();
+            if(MediaMuxerUtils.muxerUtils!=null){
+                MediaMuxerUtils.muxerUtils.exit();
+            }
+            //AVAPIsClient.stopDecode();
             AVAPIsClient.close();
             //displayVideoPop(((MediaItem)msg.obj).url);
             Intent intent = new Intent(MainActivity.this, PLVideoViewActivity.class);
             intent.putExtra("videoPath", (String) messageEvent.getObj());
             startActivity(intent);
         } else if (messageEvent.getMessage() == MessageEvent.CONNECT_SUCCESS) {
+            Log.i("连接信息","连接成功消息");
             //表示连接成功
             isConnected = true;
             //showOSD();
@@ -1170,7 +1182,7 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
             AVAPIsClient.showOsd();
         } else if (messageEvent.getMessage() == MessageEvent.DEVICE_CHANGE) {
             //设备切换
-            if (AVAPIsClient.isRecording()) {
+            if(MediaMuxerUtils.muxerUtils!=null&&MediaMuxerUtils.muxerUtils.isMuxerStarted()){
                 Toast.makeText(MainActivity.this, "正在录制，请先停止后再切换设备", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -1181,13 +1193,20 @@ public class MainActivity extends Activity implements Dllipcsdk.CBRawData, View.
                 @Override
                 public void run() {
                     AVAPIsClient.close();
-                    AVAPIsClient.releaseDecodec();
-                    AVAPIsClient.start(getApplicationContext(), surface);
+                    if(MediaMuxerUtils.muxerUtils!=null){
+                        MediaMuxerUtils.muxerUtils.releaseDecodec();
+                    }
+                    //AVAPIsClient.releaseDecodec();
+                    AVAPIsClient.start(getApplicationContext());
+                    MediaMuxerUtils.getMuxerRunnableInstance(surface).startDecode();
                 }
             }, 500);
 
+
         } else if (messageEvent.getMessage() == MessageEvent.NET_CONNECT) {
-            buttonConnect.setText("正在连接");
+            if(!isConnected) {
+                buttonConnect.setText("正在连接");
+            }
             Toast.makeText(MainActivity.this, "网络已连接", Toast.LENGTH_SHORT).show();
            // AVAPIsClient.start(getApplicationContext(), surface);
         } else if (messageEvent.getMessage() == MessageEvent.NET_LOSS) {

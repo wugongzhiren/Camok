@@ -403,7 +403,7 @@ public class IoCtrl {
     }
 
     public void setOSDTime() {
-        byte[] timeByte = new byte[1024];
+        byte[] timeByte = new byte[40];
         Calendar c = Calendar.getInstance();//
         int mYear = c.get(Calendar.YEAR); // 获取当前年份
         int mMonth = c.get(Calendar.MONTH) + 1;// 获取当前月份
@@ -411,16 +411,51 @@ public class IoCtrl {
         int mHour = c.get(Calendar.HOUR_OF_DAY);//时
         int mMinute = c.get(Calendar.MINUTE);//分
         int mSecond=c.get(Calendar.SECOND);
+        Log.i("时间",mYear+"-"+mMonth+"-"+mDay+"-"+mHour+"-"+mMinute+"-"+mSecond);
         timeByte[6] = 0x11;
         timeByte[7] = (byte) 0x89;
         timeByte[8] = 0x0;
         timeByte[9] = (byte) 0x6;
-        timeByte[10] = (byte) mSecond;//秒正常范围为0-59
-        timeByte[11] = (byte) mMinute;//分正常范围0-59
-        timeByte[12] = (byte) mHour;//时正常范围为0-23
-        timeByte[13] = (byte) mDay;//日范围01-31
-        timeByte[14] = (byte) mMonth;//月范围从1-12
-        timeByte[15] = (byte) mYear;//年 从1900 年算起至今的年数
+        //秒正常范围为0-59
+        timeByte[10] = (byte) (mSecond & 0xFF);
+        timeByte[11] = (byte) ((mSecond >> 8) & 0xFF);
+        timeByte[12] = (byte) ((mSecond >> 16) & 0xFF);
+        timeByte[13] = (byte) ((mSecond >> 24) & 0xFF);
+
+        //分
+        timeByte[14] = (byte) (mMinute & 0xFF);
+        timeByte[15] = (byte) ((mMinute >> 8) & 0xFF);
+        timeByte[16] = (byte) ((mMinute >> 16) & 0xFF);
+        timeByte[17] = (byte) ((mMinute >> 24) & 0xFF);
+
+        //时
+        timeByte[18] = (byte) (mHour & 0xFF);
+        timeByte[19] = (byte) ((mHour >> 8) & 0xFF);
+        timeByte[20] = (byte) ((mHour >> 16) & 0xFF);
+        timeByte[21] = (byte) ((mHour >> 24) & 0xFF);
+
+        //日
+        timeByte[22] = (byte) (mDay & 0xFF);
+        timeByte[23] = (byte) ((mDay >> 8) & 0xFF);
+        timeByte[24] = (byte) ((mDay >> 16) & 0xFF);
+        timeByte[25] = (byte) ((mDay >> 24) & 0xFF);
+
+        //月
+        timeByte[26] = (byte) (mMonth & 0xFF);
+        timeByte[27] = (byte) ((mMonth >> 8) & 0xFF);
+        timeByte[28] = (byte) ((mMonth >> 16) & 0xFF);
+        timeByte[29] = (byte) ((mMonth >> 24) & 0xFF);
+
+        //年
+        timeByte[30] = (byte) (mYear & 0xFF);
+        timeByte[31] = (byte) ((mYear >> 8) & 0xFF);
+        timeByte[32] = (byte) ((mYear >> 16) & 0xFF);
+        timeByte[33] = (byte) ((mYear >> 24) & 0xFF);
+        //timeByte[11] = (byte) mMinute;//分正常范围0-59
+        //timeByte[12] = (byte) mHour;//时正常范围为0-23
+       // timeByte[13] = (byte) mDay;//日范围01-31
+        //timeByte[14] = (byte) mMonth;//月范围从1-12
+       // timeByte[15] = (byte) mYear;//年 从1900 年算起至今的年数
         TaskCenter.sharedCenter().send(timeByte);
     }
 }

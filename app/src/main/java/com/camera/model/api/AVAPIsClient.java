@@ -2,6 +2,7 @@ package com.camera.model.api;
 
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Surface;
 
@@ -62,14 +63,14 @@ public class AVAPIsClient {
      * 开始连接设备
      */
     private static Context mContext;
-    public static MediaMuxerUtils mMuxerUtils ;
+    //public static MediaMuxerUtils mMuxerUtils ;
     private static EncoderVideoRunnable videoRunnable;
-    public static int start(Context context, Surface surface) {
+    public static int start(Context context) {
         mContext=context.getApplicationContext();
         /*videoRunnable=new EncoderVideoRunnable(null,surface);
         new Thread(videoRunnable).start();*/
-        mMuxerUtils =MediaMuxerUtils.getMuxerRunnableInstance(surface);
-        mMuxerUtils.startDecode();
+        //mMuxerUtils =MediaMuxerUtils.getMuxerRunnableInstance(surface);
+        //mMuxerUtils.startDecode();
         //mMuxerUtils.startMuxerThread();
         //username = user.getUsername();
         //password = user.getPassword();
@@ -123,8 +124,15 @@ public class AVAPIsClient {
             //System.out.printf("avClientStart 连接失败[%d]\n", avIndex);
             return -3;
         } else {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    EventBus.getDefault().post(new MessageEvent(MessageEvent.CONNECT_SUCCESS,null));
+                }
+            },1800);
+            IoCtrl.getInstance().setOSDTime();
             Log.i("Decode","连接成功");
-            EventBus.getDefault().post(new MessageEvent(MessageEvent.CONNECT_SUCCESS,null));
+
         }
         if (startIpcamStream(avIndex)) {
             //getOSD();
@@ -144,11 +152,11 @@ public class AVAPIsClient {
 
     public static void stopDecode(){
         //mMuxerUtils.stopMuxer();
-       mMuxerUtils.exit();
+      // mMuxerUtils.exit();
     }
     public static void releaseDecodec(){
         //mMuxerUtils.stopMuxer();
-        mMuxerUtils.releaseDecodec();
+        //mMuxerUtils.releaseDecodec();
     }
     public static int returnActualLength(byte[] data) {
         int i = 0;
@@ -158,9 +166,9 @@ public class AVAPIsClient {
         }
         return i;
     }
-    public static boolean isRecording(){
-        return mMuxerUtils.isMuxerStarted();
-    }
+/*    public static boolean isRecording(){
+        //return mMuxerUtils.isMuxerStarted();
+    }*/
     // 用来判断是否和服务器建立了 IO 连接
     public static boolean startIpcamStream(int avIndex) {
         AVAPIs av = new AVAPIs();
@@ -431,7 +439,7 @@ public class AVAPIsClient {
             byte[] videoBuffer;
             long index=0;
             while (true) {
-                if(mMuxerUtils.isExit){
+                if(MediaMuxerUtils.isExit){
                     return;
                 }
                 videoBuffer = new byte[VIDEO_BUF_SIZE];
@@ -486,7 +494,9 @@ public class AVAPIsClient {
                     videoRunnable.addData(videoBuffer);
                 }*/
                 if(ret>0){
-                    mMuxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer,index++));
+                    if(MediaMuxerUtils.muxerUtils!=null) {
+                        MediaMuxerUtils.muxerUtils.addVideoFrameData(new BufferInfo(outFrameSize[0], videoBuffer, index++));
+                    }
                 }else{
                     continue;
                 }

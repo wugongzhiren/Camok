@@ -24,7 +24,7 @@ public class MediaMuxerUtils {
     private boolean isVideoAdded;
     public boolean isRecord = false;
     private boolean isMuxerStarted;
-    public boolean isExit = false;
+    public static boolean isExit = false;
     private int videoTrack = -1;
 
     private Object lock = new Object();
@@ -34,7 +34,7 @@ public class MediaMuxerUtils {
     private EncoderVideoRunnable videoRunnable;
     private Thread mMuxerThread;
     private Thread mVideoThread;
-    private static MediaMuxerUtils muxerUtils;
+    public static MediaMuxerUtils muxerUtils;
     private Surface mSurface;
 
     private MediaMuxerUtils(Surface surface) {
@@ -42,9 +42,12 @@ public class MediaMuxerUtils {
     }
 
     public static MediaMuxerUtils getMuxerRunnableInstance(Surface surface) {
-        //if (muxerUtils == null) {
-        muxerUtils = new MediaMuxerUtils(surface);
-        return muxerUtils;
+        if (muxerUtils == null) {
+            muxerUtils = new MediaMuxerUtils(surface);
+            return muxerUtils;
+        }else{
+            return muxerUtils;
+        }
     }
 
     public void startDecode() {
